@@ -1,0 +1,270 @@
+{
+  "schema": "demo-content-pack/1",
+  "id": "chatgpt-mcp-flow",
+  "title": "AI assistant to MCP: authorization flow",
+  "version": "0.1.0",
+  "demo": {
+    "id": "chatgpt-mcp-flow",
+    "name": "AI assistant to MCP: authorization flow",
+    "catalog": "D25",
+    "baseUrl": "http://localhost:6650",
+    "doctor": "/api/health",
+    "tags": [
+      "mcp",
+      "oauth",
+      "pkce",
+      "token-exchange",
+      "pingfederate"
+    ]
+  },
+  "glossary": [
+    {
+      "id": "access-token",
+      "term": "Access token",
+      "definition": "The short-lived token the client receives for the gateway: audience is the public gateway, scope is narrow (items.read). Here it is MOCK-ISSUED with an in-memory ES256 key and protects nothing.",
+      "aliases": [
+        "bearer token"
+      ]
+    },
+    {
+      "id": "act-claim",
+      "term": "act claim",
+      "definition": "The actor claim in an exchanged token (RFC 8693): who is acting on behalf of the subject. The private server requires it to be the gateway's non-human identity, so a user token passed straight through is refused.",
+      "aliases": [
+        "delegation"
+      ]
+    },
+    {
+      "id": "added-not-signed-in",
+      "term": "Added, not signed in",
+      "definition": "The state of a connector that a member added from the catalog but has not used yet. It appears in the member's own agent, with nothing installed. Sign-in and consent start on first use, when the first tool call is answered with a 401.",
+      "aliases": [
+        "first use",
+        "sign-in on first use"
+      ]
+    },
+    {
+      "id": "authorization-server-metadata",
+      "term": "Authorization-server metadata",
+      "definition": "A JSON document an authorization server publishes (RFC 8414): its issuer, endpoints and supported PKCE methods. The client checks that the issuer equals the address it fetched the document from and that S256 is offered.",
+      "aliases": [
+        "RFC 8414"
+      ]
+    },
+    {
+      "id": "catalog-review",
+      "term": "Catalog review",
+      "definition": "The organisational step where a catalog checks a submitted connector before listing it. There is no protocol here, and what a real catalog's review checks is UNVERIFIED: no standard or source is cited. The mock simply lists the connector, unless the unlisted_connector mistake holds the review.",
+      "aliases": [
+        "review",
+        "listing"
+      ]
+    },
+    {
+      "id": "connector-catalog",
+      "term": "Connector catalog",
+      "definition": "In this demo, the assistant's list of connectors that members can add. The company publishes a connector to it once, the catalog reviews and lists it, and a member adds it for free with nothing to install. The catalog here is an invented teaching model on loopback; no real assistant's catalog is claimed to work this way (UNVERIFIED).",
+      "aliases": [
+        "catalog",
+        "connector listing"
+      ]
+    },
+    {
+      "id": "connector-manifest",
+      "term": "Connector manifest",
+      "definition": "The small description the company submits to the catalog: connector name, publisher, the https address of its MCP server and the tool list. It holds no token and no secret; authorization is discovered later, on first use (RFC 9728). The format is a mock invented for teaching (UNVERIFIED).",
+      "aliases": [
+        "manifest",
+        "connector metadata"
+      ]
+    },
+    {
+      "id": "enterprise-idp",
+      "term": "Enterprise IdP (authentication only)",
+      "definition": "The OpenID Connect identity provider that owns the user directory. PingFederate owns no users here: it redirects the browser to the IdP, receives a signed ID token and makes the authorization decision itself.",
+      "aliases": [
+        "OIDC IdP"
+      ]
+    },
+    {
+      "id": "front-channel",
+      "term": "Front channel",
+      "definition": "Messages that travel through the user's browser as redirects. The authorization request, the hand-off to the enterprise IdP and the authorization response are front-channel; code redemption and token exchange are direct calls.",
+      "aliases": [
+        "back channel"
+      ]
+    },
+    {
+      "id": "id-token",
+      "term": "ID token",
+      "definition": "A signed token from the IdP that says who signed in. PingFederate validates its signature, issuer, audience, nonce and expiry. It makes no authorization decision and is never sent to the gateway."
+    },
+    {
+      "id": "interlock",
+      "term": "Interlock",
+      "definition": "A check by one actor that makes a mistake by another actor harmless: PKCE, state, iss, the redirect allow-list, audience, expiry, scope and the act claim. The Interlocks tab shows who refuses each mistake and with which error.",
+      "aliases": [
+        "mistake toggle"
+      ]
+    },
+    {
+      "id": "iss-parameter",
+      "term": "iss in the authorization response",
+      "definition": "RFC 9207 adds the issuer to the authorization response. The client compares it with the issuer from the metadata, which defeats a mix-up attack where a malicious server impersonates the real one.",
+      "aliases": [
+        "mix-up attack"
+      ]
+    },
+    {
+      "id": "mock-issued",
+      "term": "MOCK-ISSUED",
+      "definition": "Every token, code and verifier here comes from an in-process mock actor with an in-memory key. They are shown raw on purpose and labelled; passwords, one-time codes and the gateway secret are redacted.",
+      "aliases": [
+        "simulation"
+      ]
+    },
+    {
+      "id": "nhi",
+      "term": "Non-human identity (NHI)",
+      "definition": "The gateway's own identity and credential at the authorization server. How a product stores it is described in the source proposal and is UNVERIFIED against product documentation.",
+      "aliases": [
+        "workload identity"
+      ]
+    },
+    {
+      "id": "pkce",
+      "term": "PKCE (S256)",
+      "definition": "Proof Key for Code Exchange (RFC 7636). The client keeps a random code_verifier private and sends only its SHA-256 hash, the code_challenge, in the authorization request. At redemption it sends the plain verifier; a stolen authorization code is useless without it.",
+      "aliases": [
+        "code_verifier",
+        "code_challenge"
+      ]
+    },
+    {
+      "id": "protected-resource-metadata",
+      "term": "Protected-resource metadata",
+      "definition": "A JSON document a protected resource publishes (RFC 9728). The gateway's 401 answer points at it with resource_metadata, and it names the authorization servers the client may use. The client checks that its resource value equals the server it called.",
+      "aliases": [
+        "resource_metadata"
+      ]
+    },
+    {
+      "id": "resource-indicator",
+      "term": "Resource indicator",
+      "definition": "The resource parameter (RFC 8707) names the server a token is for. The authorization server binds the token's audience to it, so a token is only good at the resource it was issued for.",
+      "aliases": [
+        "audience",
+        "aud"
+      ]
+    },
+    {
+      "id": "state",
+      "term": "state",
+      "definition": "A random value the client sends and expects back unchanged in the authorization response. A response that does not carry the client's own value is not an answer to its own request."
+    },
+    {
+      "id": "token-exchange",
+      "term": "Token exchange (RFC 8693)",
+      "definition": "The gateway swaps the user's token for a new one at the authorization server. The new token has a new audience (the private server), the same or narrower scope and an act claim naming the gateway. The server re-validates it.",
+      "aliases": [
+        "on-behalf-of",
+        "OBO"
+      ]
+    }
+  ],
+  "sources": [],
+  "cards": [
+    {
+      "id": "interlocks",
+      "label": "Mistakes and interlocks",
+      "description": "Replay a connector that was never listed, a wrong verifier, wrong audience, missing resource, expired token or replayed code and see which actor refuses.",
+      "group": "try-it",
+      "terms": [
+        "interlock",
+        "resource-indicator",
+        "iss-parameter",
+        "state"
+      ],
+      "story": "S05",
+      "action": {
+        "type": "route",
+        "href": "/"
+      }
+    },
+    {
+      "id": "real",
+      "label": "What is real and what is not",
+      "description": "Which parts are real HTTP and crypto between mock actors, which product behaviour is UNVERIFIED, and which RFCs apply.",
+      "group": "concept",
+      "terms": [
+        "mock-issued",
+        "nhi",
+        "catalog-review"
+      ],
+      "story": "S06",
+      "action": {
+        "type": "route",
+        "href": "/"
+      }
+    },
+    {
+      "id": "sequence",
+      "label": "The 20-message flow",
+      "description": "Press Simulate to walk the real mock exchange, from the catalog (publish, list, add for free (UNVERIFIED)) through sign-in on first use to the answer, message by message, with the wire form of each.",
+      "group": "try-it",
+      "terms": [
+        "connector-catalog",
+        "connector-manifest",
+        "added-not-signed-in",
+        "protected-resource-metadata",
+        "authorization-server-metadata",
+        "pkce",
+        "token-exchange"
+      ],
+      "story": "S01",
+      "action": {
+        "type": "route",
+        "href": "/"
+      }
+    }
+  ],
+  "diagrams": [
+    {
+      "id": "sequence",
+      "label": "Sequence diagram",
+      "href": "/"
+    }
+  ],
+  "stories": [
+    {
+      "id": "S01",
+      "title": "Getting the connector",
+      "say": "Example Corp publishes its connector to the assistant's catalog once. The catalog reviews and lists it (what a real review checks is UNVERIFIED). Example Corp's members add it from the catalog for free, with nothing to install (UNVERIFIED), and it appears in their own agent, not signed in yet."
+    },
+    {
+      "id": "S02",
+      "title": "The ask",
+      "say": "a member of Example Corp asks the AI assistant what widget-100 costs. Answering needs the price-lookup tool, which lives behind Example Corp's front door."
+    },
+    {
+      "id": "S03",
+      "title": "Finding the rules",
+      "say": "the AI assistant calls price-lookup with no token, is told where the rules are, and learns which authorization server to use. Nothing was pre-configured except the tool's address."
+    },
+    {
+      "id": "S04",
+      "title": "Proving who is asking",
+      "say": "PingFederate owns no users, so it sends the browser to the enterprise IdP. The user signs in there; PingFederate gets a signed ID token and asks the user to consent to items.read."
+    },
+    {
+      "id": "S05",
+      "title": "Trading the code",
+      "say": "the AI assistant checks state and iss, then redeems the code with the secret it kept (the PKCE verifier) and receives a short-lived token for the public MCP gateway only."
+    },
+    {
+      "id": "S06",
+      "title": "Acting on the user's behalf",
+      "say": "the public MCP gateway validates the token, swaps it for a narrower token that names itself as the acting party, and the private MCP server checks everything again before price-lookup runs."
+    }
+  ]
+}

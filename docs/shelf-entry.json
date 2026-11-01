@@ -1,0 +1,16 @@
+{
+  "demos": [
+    {
+      "id": "chatgpt-mcp-flow",
+      "name": "AI assistant to MCP authorization flow LAB",
+      "catalogId": "D25",
+      "kind": "Demo",
+      "description": "How a remote MCP server behind an enterprise front door is authorized when a public AI assistant calls it for a signed-in user: connector catalog, PKCE, resource indicators, IdP hand-off, RFC 8693 exchange. 20 messages backed by real mock exchanges. Mock only; product claims UNVERIFIED.",
+      "url": "http://localhost:6650",
+      "healthPath": "/api/health",
+      "composeFile": "chatgpt-mcp-flow-LAB/docker-compose.yml",
+      "composeOverlays": [],
+      "notes": "Host-run: npm ci && npm run build && npm start (port 6650; mock actors on 6651-6655, MCP_FLOW_STUB_BASE moves them; npm run doctor checks it). Docker: HOST_PORT=6650 docker compose up --build -d (published on 127.0.0.1 only). Mock only; Live is refused. Catalog id D25 is carried over from the old repo and is still a placeholder (to confirm)."
+    }
+  ]
+}

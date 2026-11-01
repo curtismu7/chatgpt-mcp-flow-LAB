@@ -1,0 +1,31 @@
+{
+  "name": "chatgpt-mcp-flow",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "AI assistant to MCP: how a remote MCP server behind an enterprise front door is authorized when a public AI assistant calls it for a signed-in user. A simulation: in-process mock actors on 127.0.0.1, no real provider, no outbound network.",
+  "license": "MIT",
+  "workspaces": [
+    "server",
+    "web"
+  ],
+  "engines": {
+    "node": ">=26"
+  },
+  "scripts": {
+    "start": "npm start -w server",
+    "dev": "npm run dev -w web",
+    "build": "npm run build -w web",
+    "test": "npm test -w server && npm test -w web && node --test scripts/*.test.mjs",
+    "doctor": "node scripts/doctor.mjs",
+    "reset": "node scripts/reset.mjs",
+    "prepare": "git config core.hooksPath .githooks || true",
+    "e2e": "node scripts/e2e.mjs",
+    "talk-track": "node scripts/build-talk-track.mjs",
+    "content-pack": "node scripts/build-content-pack.mjs && node scripts/validate-content-pack.mjs"
+  },
+  "devDependencies": {
+    "ajv": "^8.20.0",
+    "playwright": "^1.64.1"
+  }
+}

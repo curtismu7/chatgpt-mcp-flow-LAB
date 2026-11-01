@@ -1,0 +1,350 @@
+{
+  "schema": "diagram-studio/1",
+  "id": "authorization-flow",
+  "title": "AI assistant to MCP: how the call is authorized",
+  "lede": "Twenty numbered messages between eight participants: the connector is published, listed and added, then on first use the assistant is challenged, discovers the rules, authenticates the user through PingFederate and the enterprise IdP with PKCE, and the gateway swaps the token for a narrower on-behalf-of token before the private MCP server runs the tool. Simulated; every actor is an in-process mock. Product details are UNVERIFIED.",
+  "groups": {
+    "people": {
+      "label": "People and companies",
+      "color": "dark"
+    },
+    "assistant": {
+      "label": "Assistant side",
+      "color": "grey"
+    },
+    "ping": {
+      "label": "Authorization server",
+      "color": "red"
+    },
+    "enterprise": {
+      "label": "Enterprise side",
+      "color": "blue"
+    }
+  },
+  "nodes": [
+    {
+      "id": "publisher",
+      "label": "Example Corp",
+      "group": "people",
+      "sub": [
+        "connector publisher"
+      ],
+      "x": 0,
+      "y": 0
+    },
+    {
+      "id": "catalog",
+      "label": "Connector catalog",
+      "group": "assistant",
+      "sub": [
+        "the assistant's catalog (mock)"
+      ],
+      "x": 210,
+      "y": 0
+    },
+    {
+      "id": "user",
+      "label": "User",
+      "group": "people",
+      "sub": [
+        "in the AI assistant"
+      ],
+      "x": 420,
+      "y": 0
+    },
+    {
+      "id": "client",
+      "label": "AI assistant",
+      "group": "assistant",
+      "sub": [
+        "MCP client, OAuth public client"
+      ],
+      "x": 630,
+      "y": 0
+    },
+    {
+      "id": "pf",
+      "label": "PingFederate",
+      "group": "ping",
+      "sub": [
+        "OAuth 2.1 authorization server, STS"
+      ],
+      "x": 840,
+      "y": 0
+    },
+    {
+      "id": "idp",
+      "label": "Enterprise IdP",
+      "group": "enterprise",
+      "sub": [
+        "OIDC, authentication only"
+      ],
+      "x": 1050,
+      "y": 0
+    },
+    {
+      "id": "gateway",
+      "label": "Public MCP gateway",
+      "group": "enterprise",
+      "sub": [
+        "protected resource, OBO exchange"
+      ],
+      "x": 1260,
+      "y": 0
+    },
+    {
+      "id": "private",
+      "label": "Private MCP server",
+      "group": "enterprise",
+      "sub": [
+        "tools, internal network"
+      ],
+      "x": 1470,
+      "y": 0
+    }
+  ],
+  "edges": [
+    {
+      "source": "publisher",
+      "target": "catalog",
+      "label": "Company publishes the connector"
+    },
+    {
+      "source": "catalog",
+      "target": "publisher",
+      "label": "Catalog reviews and lists it"
+    },
+    {
+      "source": "user",
+      "target": "catalog",
+      "label": "Member adds it from the catalog"
+    },
+    {
+      "source": "catalog",
+      "target": "client",
+      "label": "It appears in the member's agent"
+    },
+    {
+      "source": "user",
+      "target": "client",
+      "label": "Asks a price question"
+    },
+    {
+      "source": "client",
+      "target": "gateway",
+      "label": "Tool call with no token"
+    },
+    {
+      "source": "client",
+      "target": "gateway",
+      "label": "Protected-resource metadata"
+    },
+    {
+      "source": "client",
+      "target": "pf",
+      "label": "Authorization-server metadata"
+    },
+    {
+      "source": "client",
+      "target": "pf",
+      "label": "Authorization request"
+    },
+    {
+      "source": "pf",
+      "target": "idp",
+      "label": "Front-channel redirect to the IdP"
+    },
+    {
+      "source": "user",
+      "target": "idp",
+      "label": "User authenticates"
+    },
+    {
+      "source": "idp",
+      "target": "pf",
+      "label": "Signed ID token"
+    },
+    {
+      "source": "pf",
+      "target": "client",
+      "label": "Authorization code + iss"
+    },
+    {
+      "source": "client",
+      "target": "pf",
+      "label": "Code redemption"
+    },
+    {
+      "source": "pf",
+      "target": "client",
+      "label": "Access token"
+    },
+    {
+      "source": "client",
+      "target": "gateway",
+      "label": "MCP request with bearer token"
+    },
+    {
+      "source": "gateway",
+      "target": "pf",
+      "label": "RFC 8693 token exchange"
+    },
+    {
+      "source": "gateway",
+      "target": "private",
+      "label": "Route to the private MCP server"
+    },
+    {
+      "source": "private",
+      "target": "client",
+      "label": "Result returns"
+    },
+    {
+      "source": "client",
+      "target": "user",
+      "label": "Answer"
+    }
+  ],
+  "steps": [
+    {
+      "title": "Company publishes the connector",
+      "what": "Once, the company submits its connector (a manifest: name, publisher, MCP server URL, tool list) to the assistant's catalog. The manifest and the call are a MOCK; no real catalog's submission format is claimed (UNVERIFIED)",
+      "edges": [
+        0
+      ]
+    },
+    {
+      "title": "Catalog reviews and lists it",
+      "what": "Organisational step, no protocol: the catalog reviews the submission and lists it. What a real catalog's review checks is UNVERIFIED (no standard or source is cited). The mock simply lists it; the status read shown is a stand-in",
+      "edges": [
+        1
+      ]
+    },
+    {
+      "title": "Member adds it from the catalog",
+      "what": "The member picks the connector in the catalog and adds it, free, with nothing to install (a MOCK call; real catalogs differ and this is UNVERIFIED)",
+      "edges": [
+        2
+      ]
+    },
+    {
+      "title": "It appears in the member's agent",
+      "what": "The connector shows up in the member's own agent, not signed in yet: state \"added, not signed in\". Sign-in and consent come on first use, which is when the next phase starts",
+      "edges": [
+        3
+      ]
+    },
+    {
+      "title": "Asks a price question",
+      "what": "The user asks the assistant what an item costs",
+      "edges": [
+        4
+      ]
+    },
+    {
+      "title": "Tool call with no token",
+      "what": "Calls the protected MCP tool with no token, gets 401 + WWW-Authenticate: resource_metadata (RFC 9728)",
+      "edges": [
+        5
+      ]
+    },
+    {
+      "title": "Protected-resource metadata",
+      "what": "GET /.well-known/oauth-protected-resource: authorization_servers lists PingFederate (RFC 9728)",
+      "edges": [
+        6
+      ]
+    },
+    {
+      "title": "Authorization-server metadata",
+      "what": "GET /.well-known/oauth-authorization-server: endpoints, S256, client identity (RFC 8414)",
+      "edges": [
+        7
+      ]
+    },
+    {
+      "title": "Authorization request",
+      "what": "GET the authorization endpoint with code_challenge, method S256, resource and scopes (RFC 7636, RFC 8707)",
+      "edges": [
+        8
+      ]
+    },
+    {
+      "title": "Front-channel redirect to the IdP",
+      "what": "PingFederate owns no user directory, so the browser is redirected to the enterprise IdP",
+      "edges": [
+        9
+      ]
+    },
+    {
+      "title": "User authenticates",
+      "what": "The user authenticates at the enterprise IdP (password, passkey, MFA)",
+      "edges": [
+        10
+      ]
+    },
+    {
+      "title": "Signed ID token",
+      "what": "Signed ID token (JWT) back to PingFederate, which then shows consent",
+      "edges": [
+        11
+      ]
+    },
+    {
+      "title": "Authorization code + iss",
+      "what": "authorization_code, state and iss (RFC 9207) to the allow-listed redirect URI",
+      "edges": [
+        12
+      ]
+    },
+    {
+      "title": "Code redemption",
+      "what": "POST the token endpoint with the code and the plaintext code_verifier (PKCE interlock)",
+      "edges": [
+        13
+      ]
+    },
+    {
+      "title": "Access token",
+      "what": "access_token: aud = the public gateway, narrow scope, short TTL",
+      "edges": [
+        14
+      ]
+    },
+    {
+      "title": "MCP request with bearer token",
+      "what": "MCP request with the access token; the gateway validates iss, aud, exp and scope",
+      "edges": [
+        15
+      ]
+    },
+    {
+      "title": "RFC 8693 token exchange",
+      "what": "On-behalf-of token: act = the gateway identity, narrowed scopes, new audience (RFC 8693)",
+      "edges": [
+        16
+      ]
+    },
+    {
+      "title": "Route to the private MCP server",
+      "what": "The private server re-validates the OBO token and enforces the per-API scope",
+      "edges": [
+        17
+      ]
+    },
+    {
+      "title": "Result returns",
+      "what": "The structured result returns up the chain to the assistant",
+      "edges": [
+        18
+      ]
+    },
+    {
+      "title": "Answer",
+      "what": "The assistant answers the user",
+      "edges": [
+        19
+      ]
+    }
+  ]
+}
