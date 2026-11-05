@@ -19,10 +19,10 @@ export const BUILTIN = [
   { id: 'builtin-7', re: new RegExp(j('digital', '[ -]?', 'front', '[ -]?', 'door'), 'i') },
   { id: 'builtin-8', re: new RegExp(j('mcp', '\\.', 'u', 'h', 'g'), 'i') },
 ];
-// github.com is NOT an allowed host. Only two exact URL prefixes are allowed: this repo's own ping-sandbox URL in the docs,
+// github.com is NOT an allowed host. Only two exact URL prefixes are allowed: this repo's own curtismu7 URL in the docs,
 // and the gitleaks release download in ci.yml. Any other github.com URL (for example a real customer org) is a finding.
 const ALLOWED_HOST = /(^|\.)(example|invalid)$|^localhost$|^127\.0\.0\.1$|^\[::1\]$|^\$\{?[A-Z_]+/;
-const ALLOWED_GITHUB_PATH = /^\/(ping-sandbox\/chatgpt-mcp-flow-LAB(?:\.git)?(?![A-Za-z0-9._-])|gitleaks\/gitleaks\/releases\/download\/)/;
+const ALLOWED_GITHUB_PATH = /^\/(curtismu7\/chatgpt-mcp-flow-LAB(?:\.git)?(?![A-Za-z0-9._-])|gitleaks\/gitleaks\/releases\/download\/)/;
 const URL_RE = /\bhttps?:\/\/(?:[^\s/@'"`]*@)?([A-Za-z0-9.[\]-]+)(\/[^\s'"`)>\]]*)?/g;
 export const urlAllowed = (host, urlPath = '') => {
   const h = host.replace(/\.$/, '');
