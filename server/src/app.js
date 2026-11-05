@@ -41,7 +41,6 @@ export function createApp({ runtime, health = createHealth(), webDist = null, co
   app.use(originGuard);
   app.use((_req, res, next) => { res.set(API_HEADERS); next(); });
   if (webDist && fs.existsSync(path.join(webDist, 'index.html'))) {
-app.get('/api/shelf', (_req, res) => { res.set('Cache-Control', 'no-store'); res.json(shelfInfo()); }); // the header "Shelf" button
     app.use(express.static(webDist, {
       index: 'index.html', dotfiles: 'ignore',
       setHeaders: (res) => res.set({ ...API_HEADERS, 'Content-Security-Policy': UI_CSP }),
@@ -109,6 +108,7 @@ app.get('/api/shelf', (_req, res) => { res.set('Cache-Control', 'no-store'); res
     console.error('[chatgpt-mcp-flow] api error:', err.message);
     return res.status(500).json({ error: 'server_error' }); // never leaks the message or stack
   });
+  app.get('/api/shelf', (_req, res) => { res.set('Cache-Control', 'no-store'); res.json(shelfInfo()); }); // the header "Shelf" button
   app.use('/api', api);
   app.use((_req, res) => bad(res, 'no such endpoint', 404));
   app.use(outerErrorHandler);
