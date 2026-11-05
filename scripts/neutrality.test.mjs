@@ -29,7 +29,7 @@ test('github.com is allowed only for this repo URL and the gitleaks release down
   try {
     const ok = ['https://github.com/curtismu7/chatgpt-mcp-flow-LAB', 'git clone https://github.com/curtismu7/chatgpt-mcp-flow-LAB.git', 'base=https://github.com/gitleaks/gitleaks/releases/download/v8.18.4'];
     const gh = j('https', ':', '//git', 'hub.com');
-    const bad = [gh + '/' + j('some', '-customer', '-org') + '/repo', gh + '/ping-sandbox/other-repo', gh + '/ping-sandbox/chatgpt-mcp-flow-LAB-evil', gh + '/gitleaks/gitleaks/issues/1', j('https', ':', '//Git', 'Hub.com') + '/' + j('acme', '-corp'), gh];
+    const bad = [gh + '/' + j('some', '-customer', '-org') + '/repo', gh + '/curtismu7/other-repo', gh + '/curtismu7/chatgpt-mcp-flow-LAB-evil', gh + '/gitleaks/gitleaks/issues/1', j('https', ':', '//Git', 'Hub.com') + '/' + j('acme', '-corp'), gh];
     ok.forEach((t, i) => fs.writeFileSync(path.join(dir, `ok${i}.txt`), t));
     bad.forEach((t, i) => fs.writeFileSync(path.join(dir, `bad${i}.txt`), t));
     const files = new Set(scanTree(dir, null).map((h) => h.file));

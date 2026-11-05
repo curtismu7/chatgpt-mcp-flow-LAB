@@ -57,7 +57,7 @@ npm run build       # builds web/dist, which the server serves at /
 npm start           # control API and UI on http://127.0.0.1:6650/ (mock actors on 127.0.0.1:6651-6655)
 ```
 
-Open http://127.0.0.1:6650/ . Everything works in Mock mode with no setup at all: no settings file, no account, no network. The repos are internal, so you need access to the `ping-sandbox` org to clone.
+Open http://127.0.0.1:6650/ . Everything works in Mock mode with no setup at all: no settings file, no account, no network. The repos are internal, so you need access to the `curtismu7` org to clone.
 
 Try the API:
 
@@ -146,7 +146,7 @@ On Node 26 the suite passes with 122 server tests, 43 web tests (vitest) and 55 
 
 ## Ownership
 
-- Owner: the Ping demo family owner (repo owner of `ping-sandbox`).
+- Owner: the Ping demo family owner (repo owner of `curtismu7`).
 - License: MIT (see `LICENSE`).
 - Found a problem? Open an issue on the repo.
 
