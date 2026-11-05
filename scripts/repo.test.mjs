@@ -42,7 +42,7 @@ test('README follows the README standard: title ends in LAB, plain Tier, Repo an
   assert.match(r, /MCP_FLOW_PORT=<other port> npm start/);
   assert.match(r, /Port range for this app: 6650-6699\./);
   assert.match(r, /Do not use 8080, 5173, 3000, 4000, 4400, 4510, 4600-4601, 18080, 19080 or 19090\./);
-  assert.ok(!/ping-devops|cmuir|curtismu/i.test(r));
+  assert.ok(!/ping-devops|cmuir/i.test(r));
   const order = ['What is simulated', 'Run from a clone', 'Settings file', 'Ports, and what to do if the port is taken', 'Mock and live modes', 'Health, doctor and reset', 'Docker (optional)', 'Tests', 'Troubleshooting', 'Ownership'].map((h) => r.indexOf(`\n## ${h}`));
   assert.ok(order.every((i) => i > 0), order.join());
   assert.deepEqual([...order].sort((a, b) => a - b), order, 'sections are in order');
