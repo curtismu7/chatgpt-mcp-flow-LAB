@@ -35,7 +35,7 @@ test('README follows the README standard: title ends in LAB, plain Tier, Repo an
   const r = read('README.md');
   assert.match(r.split('\n')[0], /^# .* LAB$/);
   assert.match(r, /^Tier: Demo$/m);
-  assert.match(r, /^Repo: https:\/\/github\.com\/ping-sandbox\/chatgpt-mcp-flow-LAB$/m);
+  assert.match(r, /^Repo: https:\/\/github.com/curtismu7\/chatgpt-mcp-flow-LAB$/m);
   assert.match(r, /^Catalog: D25$/m);
   assert.match(r, /placeholder/);
   assert.match(r, /lsof -iTCP:6650 -sTCP:LISTEN -n -P/);
