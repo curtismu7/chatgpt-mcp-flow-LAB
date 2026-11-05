@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import ShelfLink from "./components/ShelfLink.jsx";
 import { getDiagram, getFlow, getHealth, postMode, postReset, postRun } from "./lib/api.js";
 import { STATUS_WORD } from "./lib/phases.js";
 import Diagram, { useDiagramPositions } from "./components/Diagram.jsx";
@@ -165,6 +166,7 @@ export default function App({ baseMs = BASE_MS }) {
       <header className="top">
         <h1>AI assistant to MCP: how the call is authorized</h1>
         <div className="top__tools">
+            <ShelfLink />
           <span className="mode-badge" data-testid="mode-badge" title="This is a teaching demo">DEMO</span>
           <div className="mode-toggle" role="group" aria-label="Mode: Mock or Live">
             <button type="button" aria-pressed="true" onClick={chooseMock} data-testid="mode-mock">Mock</button>
