@@ -1,6 +1,6 @@
 # chatgpt-mcp-flow-LAB
 
-Tier **Demo**. A neutral teaching app: how a remote MCP server behind an enterprise front door is authorized when a public AI assistant calls it for a signed-in user (PKCE, RFC 9728/8414/8707/9207, PingFederate + enterprise IdP, RFC 8693 on-behalf-of). Mock only; no real product is contacted. Repo `https://github.com/ping-sandbox/chatgpt-mcp-flow-LAB`. Catalog id D25 is a PLACEHOLDER carried over from the old repo ("to confirm"); do not present it as assigned. Node 26 only, Docker/OrbStack only (never Docker Desktop), no SE k8s build (deferred by the owner, 2026-10-31).
+Tier **Demo**. A neutral teaching app: how a remote MCP server behind an enterprise front door is authorized when a public AI assistant calls it for a signed-in user (PKCE, RFC 9728/8414/8707/9207, PingFederate + enterprise IdP, RFC 8693 on-behalf-of). Mock only; no real product is contacted. Repo `https://github.com/curtismu7/chatgpt-mcp-flow-LAB`. Catalog id D25 is a PLACEHOLDER carried over from the old repo ("to confirm"); do not present it as assigned. Node 26 only, Docker/OrbStack only (never Docker Desktop), no SE k8s build (deferred by the owner, 2026-10-31).
 
 ## Run and test
 - `npm ci`, `npm run build`, `npm start` (server 6650, mock actors 6651-6655), `npm test` (server `node --test test/*.test.js` + vitest + `node --test scripts/*.test.mjs`), `npm run doctor`, `npm run reset` (needs the server running), `npm run talk-track`, `npm run content-pack`.

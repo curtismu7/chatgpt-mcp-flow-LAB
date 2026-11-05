@@ -3,7 +3,7 @@
 How a remote MCP server behind an enterprise front door is authorized when a public AI assistant calls it on behalf of a signed-in user: a 20-message sequence diagram backed by real exchanges between in-process mock actors.
 
 Tier: Demo
-Repo: https://github.com/ping-sandbox/chatgpt-mcp-flow-LAB
+Repo: https://github.com/curtismu7/chatgpt-mcp-flow-LAB
 Catalog: D25
 
 The catalog id D25 is carried over from the old `chatgpt-mcp-flow` repo, where the plan marked it "to confirm". It is still a placeholder until the owner confirms or replaces it. No other catalog row is claimed.
@@ -50,7 +50,7 @@ The story is neutral and fictional: "Example Corp", an end user, and a generic `
 Prerequisites: Node 26 or newer. Docker only if you use the Docker form.
 
 ```sh
-git clone https://github.com/ping-sandbox/chatgpt-mcp-flow-LAB.git
+git clone https://github.com/curtismu7/chatgpt-mcp-flow-LAB.git
 cd chatgpt-mcp-flow-LAB
 npm ci
 npm run build       # builds web/dist, which the server serves at /
