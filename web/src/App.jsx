@@ -11,8 +11,10 @@ import Interlocks from "./components/Interlocks.jsx";
 import About from "./components/About.jsx";
 
 const safe = (fn, fallback) => { try { return fn(); } catch { return fallback; } };
-const initialTheme = () => safe(() => localStorage.getItem("mcpflow-theme"), null)
-  || (safe(() => window.matchMedia("(prefers-color-scheme: dark)").matches, false) ? "dark" : "light");
+const initialTheme = () => {
+  const t = safe(() => localStorage.getItem("mcpflow-theme"), null);
+  return ["auto", "light", "dark"].includes(t) ? t : "auto";
+};
 export const BASE_MS = 1700;
 const SPEEDS = [["0.5", "0.5x"], ["1", "1x"], ["2", "2x"], ["4", "4x"]];
 const FALLBACK_BANNER = "SIMULATION, MOCK mode. Every actor here is an in-process mock on 127.0.0.1. No product, tenant or identity provider is contacted. Tokens are MOCK-ISSUED and protect nothing.";
@@ -43,7 +45,8 @@ export default function App({ baseMs = BASE_MS }) {
   const epoch = useRef(0);
 
   useEffect(() => {
-    document.documentElement.dataset.theme = theme;
+    if (theme === "auto") delete document.documentElement.dataset.theme;
+    else document.documentElement.dataset.theme = theme;
     safe(() => localStorage.setItem("mcpflow-theme", theme));
   }, [theme]);
 
@@ -175,7 +178,13 @@ export default function App({ baseMs = BASE_MS }) {
           <span className="mode-chip" data-testid="mode-header">MODE: {modeName} <span className="muted">in-process stubs on 127.0.0.1{health ? ` · health ${health.state}` : ""}</span></span>
           <button type="button" onClick={reset} data-testid="reset">Reset</button>
           <button type="button" aria-pressed={presenter} onClick={togglePresenter} data-testid="presenter">{presenter ? "Exit presenter (Esc)" : "Presenter (P)"}</button>
-          <button type="button" onClick={() => setTheme(theme === "dark" ? "light" : "dark")} aria-label={`Switch to ${theme === "dark" ? "light" : "dark"} theme`}>{theme === "dark" ? "Light" : "Dark"}</button>
+          <label className="inline">Theme
+            <select value={theme} onChange={(e) => setTheme(e.target.value)} data-testid="theme">
+              <option value="auto">Auto</option>
+              <option value="light">Light</option>
+              <option value="dark">Dark</option>
+            </select>
+          </label>
         </div>
         <p className="top__note" role="status" aria-live="polite" data-testid="mode-note">{modeNote}</p>
       </header>
