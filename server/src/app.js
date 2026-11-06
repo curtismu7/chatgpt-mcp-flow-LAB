@@ -54,15 +54,18 @@ export function createApp({ runtime, health = createHealth(), webDist = null, co
   api.route('/flow').get((_req, res) => res.json({ mode: runtime.mode, config, ...FLOW_METADATA })).all(methods('GET'));
 
   api.route('/mode')
-    .get((_req, res) => res.json({ mode: runtime.mode, live: { supported: false, message: LIVE_REFUSAL } }))
+    .get((_req, res) => res.json({ mode: runtime.mode, source: 'mock', realAvailable: false, realReason: LIVE_REFUSAL, live: { supported: false, message: LIVE_REFUSAL } }))
     .post((req, res) => {
       const body = req.body ?? {};
-      if (typeof body !== 'object' || Array.isArray(body) || Object.keys(body).some((k) => k !== 'mode')) return bad(res, 'the only accepted body field is { "mode": "mock" | "live" }');
-      if (body.mode === 'mock') return res.json({ mode: runtime.mode });
-      if (body.mode === 'live') return res.status(409).json({ error: 'live_not_supported', message: LIVE_REFUSAL, mode: runtime.mode });
-      return bad(res, 'mode must be "mock" or "live"');
+      if (typeof body !== 'object' || Array.isArray(body) || Object.keys(body).some((k) => k !== 'source')) return bad(res, 'the only accepted body field is { "source": "mock" | "real" }');
+      if (body.source === 'mock') return res.json({ mode: runtime.mode, source: 'mock', realAvailable: false, realReason: LIVE_REFUSAL });
+      if (body.source === 'real') return res.status(409).json({ error: 'real_not_available', message: LIVE_REFUSAL, mode: runtime.mode, source: 'mock' });
+      return bad(res, 'source must be "mock" or "real"');
     })
     .all(methods('GET, POST'));
+
+  // Rule 19: what the Mock/Real toggle needs.
+  api.route('/info').get((_req, res) => res.json({ source: 'mock', realAvailable: false, realReason: LIVE_REFUSAL })).all(methods('GET'));
 
   // The diagram-studio/1 document the web app draws, loaded by name. A name is looked up, never used as a path.
   api.route('/diagram').get((req, res) => {

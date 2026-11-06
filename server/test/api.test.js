@@ -150,36 +150,47 @@ test('GET /api/flow carries the customer config (brand, vertical, workspace) and
   assert.deepEqual(r.json.config, { brand: 'Example Corp', vertical: 'default', workspace: 'default' });
 });
 
-// ---------------------------------------------------------------- Mock | Live
-test('GET /api/mode is mock, says Live is not supported and why', async () => {
+// ---------------------------------------------------------------- Mock | Real (rule 19)
+test('GET /api/mode is mock, says Real is not supported and why', async () => {
   const r = await request(port, 'GET', '/api/mode');
   assert.equal(r.status, 200);
   assert.equal(r.json.mode, 'mock');
-  assert.equal(r.json.live.supported, false);
-  assert.match(r.json.live.message, /Live mode is not available/);
-  assert.match(r.json.live.message, /no real provider/);
+  assert.equal(r.json.source, 'mock');
+  assert.equal(r.json.realAvailable, false);
+  assert.match(r.json.realReason, /not available|not available in this lab|Mock mode/i);
+  assert.match(r.json.realReason, /no real provider/);
 });
 
-test('POST /api/mode: mock is accepted; live is refused with 409 and an honest message and the mode does not change', async () => {
-  const mock = await request(port, 'POST', '/api/mode', { body: { mode: 'mock' } });
+test('GET /api/info returns the rule-19 shape: source, realAvailable and an honest realReason', async () => {
+  const r = await request(port, 'GET', '/api/info');
+  assert.equal(r.status, 200);
+  assert.deepEqual(Object.keys(r.json).sort(), ['realAvailable', 'realReason', 'source']);
+  assert.equal(r.json.source, 'mock');
+  assert.equal(r.json.realAvailable, false);
+  assert.match(r.json.realReason, /Mock mode/);
+});
+
+test('POST /api/mode: {source:"mock"} is accepted; {source:"real"} is refused with 409 and an honest message and the mode does not change', async () => {
+  const mock = await request(port, 'POST', '/api/mode', { body: { source: 'mock' } });
   assert.equal(mock.status, 200);
-  assert.equal(mock.json.mode, 'mock');
-  const live = await request(port, 'POST', '/api/mode', { body: { mode: 'live' } });
-  assert.equal(live.status, 409);
-  assert.equal(live.json.error, 'live_not_supported');
-  assert.equal(live.json.mode, 'mock');
-  assert.match(live.json.message, /stays in Mock mode/);
-  assert.equal((await request(port, 'GET', '/api/mode')).json.mode, 'mock');
+  assert.equal(mock.json.source, 'mock');
+  const real = await request(port, 'POST', '/api/mode', { body: { source: 'real' } });
+  assert.equal(real.status, 409);
+  assert.equal(real.json.error, 'real_not_available');
+  assert.equal(real.json.source, 'mock');
+  assert.match(real.json.message, /stays in Mock mode/);
+  assert.equal((await request(port, 'GET', '/api/mode')).json.source, 'mock');
   assert.equal((await request(port, 'GET', '/api/flow')).json.mode, 'mock');
+  assert.equal((await request(port, 'GET', '/api/info')).json.source, 'mock');
 });
 
-test('POST /api/mode refuses anything else: other values, extra fields, no body, wrong method', async () => {
-  for (const body of [{ mode: 'demo' }, { mode: 1 }, { mode: null }, { mode: ['live'] }, {}, { mode: 'mock', extra: 1 }, { mode: 'live', token: 'x' }, []]) {
+test('POST /api/mode refuses anything else: other values, extra fields, the old {mode} shape, no body, wrong method', async () => {
+  for (const body of [{ source: 'demo' }, { source: 1 }, { source: null }, { source: ['real'] }, {}, { source: 'mock', extra: 1 }, { source: 'real', token: 'x' }, { mode: 'mock' }, { mode: 'live' }, []]) {
     const r = await request(port, 'POST', '/api/mode', { body });
     assert.equal(r.status, 400, JSON.stringify(body));
     assert.equal(r.json.error, 'bad_request');
   }
   assert.equal((await request(port, 'POST', '/api/mode')).status, 400);
-  assert.equal((await request(port, 'PUT', '/api/mode', { body: { mode: 'mock' } })).status, 405);
-  assert.equal((await request(port, 'POST', '/api/mode', { body: { mode: 'live' }, headers: { origin: 'https://evil.example' } })).status, 403);
+  assert.equal((await request(port, 'PUT', '/api/mode', { body: { source: 'mock' } })).status, 405);
+  assert.equal((await request(port, 'POST', '/api/mode', { body: { source: 'real' }, headers: { origin: 'https://evil.example' } })).status, 403);
 });

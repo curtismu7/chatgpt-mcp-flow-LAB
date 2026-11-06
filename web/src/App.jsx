@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import ShelfLink from "./components/ShelfLink.jsx";
-import { getDiagram, getFlow, getHealth, postMode, postReset, postRun } from "./lib/api.js";
+import { getDiagram, getFlow, getHealth, getInfo, postMode, postReset, postRun } from "./lib/api.js";
 import { STATUS_WORD } from "./lib/phases.js";
 import Diagram, { useDiagramPositions } from "./components/Diagram.jsx";
 import { DetailsRow, Reel } from "./components/Reel.jsx";
@@ -41,6 +41,7 @@ export default function App({ baseMs = BASE_MS }) {
   const [results, setResults] = useState({});
   const [diagram, setDiagram] = useState(null);
   const [modeNote, setModeNote] = useState("");
+  const [modeInfo, setModeInfo] = useState(null);
   const { positions, selectedId, apply, reset: resetPositions } = useDiagramPositions(diagram);
   const epoch = useRef(0);
 
@@ -55,6 +56,7 @@ export default function App({ baseMs = BASE_MS }) {
     getFlow().then((f) => live && setFlow(f)).catch((e) => live && setLoadError(e.message));
     getDiagram().then((d) => live && setDiagram(d)).catch((e) => live && setLoadError(e.message));
     getHealth().then((h) => live && setHealth(h)).catch(() => {});
+    getInfo().then((i) => live && setModeInfo(i)).catch(() => {});
     return () => { live = false; };
   }, []);
 
@@ -142,10 +144,10 @@ export default function App({ baseMs = BASE_MS }) {
   const changeTab = (t) => { setTab(t); };
   const togglePresenter = useCallback(() => { setPresenter((p) => { if (!p) setTab("sequence"); return !p; }); }, []);
 
-  // Mock | Live. Mock is the only mode this lab has: Live asks the server, which refuses with an honest message, and the page stays in Mock.
+  // Mock | Real. Mock is the only mode this lab has: Real asks the server, which refuses with an honest message, and the page stays in Mock.
   const chooseMock = () => setModeNote("");
-  const chooseLive = async () => {
-    try { await postMode("live"); setModeNote(""); } catch (e) { setModeNote(e.message); }
+  const chooseReal = async () => {
+    try { await postMode("real"); setModeNote(""); } catch (e) { setModeNote(e.message); }
   };
 
   useEffect(() => {
@@ -171,9 +173,11 @@ export default function App({ baseMs = BASE_MS }) {
         <div className="top__tools">
             <ShelfLink />
           <span className="mode-badge" data-testid="mode-badge" title="This is a teaching demo">DEMO</span>
-          <div className="mode-toggle" role="group" aria-label="Mode: Mock or Live">
+          <div className="mode-toggle" role="group" aria-label="Mode: Mock or Real">
             <button type="button" aria-pressed="true" onClick={chooseMock} data-testid="mode-mock">Mock</button>
-            <button type="button" aria-pressed="false" onClick={chooseLive} data-testid="mode-live">Live</button>
+            <button type="button" aria-pressed="false" aria-disabled={modeInfo?.realAvailable === false ? "true" : undefined}
+              title={modeInfo?.realAvailable === false && modeInfo?.realReason ? modeInfo.realReason : undefined}
+              onClick={chooseReal} data-testid="mode-real">Real</button>
           </div>
           <span className="mode-chip" data-testid="mode-header">MODE: {modeName} <span className="muted">in-process stubs on 127.0.0.1{health ? ` · health ${health.state}` : ""}</span></span>
           <button type="button" onClick={reset} data-testid="reset">Reset</button>

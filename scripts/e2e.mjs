@@ -47,9 +47,9 @@ try {
   const external = []; const errors = [];
   page.on('request', (r) => { if (!r.url().startsWith(base) && !/^(data|blob):/.test(r.url())) external.push(r.url()); });
   page.on('pageerror', (e) => errors.push(e.message));
-  // The browser logs a deliberate 409 (Live is refused) as a console error; it is expected and counted separately.
-  let live409 = 0;
-  page.on('console', (m) => { if (m.type() === 'error') { if (/status of 409/.test(m.text())) live409 += 1; else errors.push(m.text()); } });
+  // The browser logs a deliberate 409 (Real is refused) as a console error; it is expected and counted separately.
+  let real409 = 0;
+  page.on('console', (m) => { if (m.type() === 'error') { if (/status of 409/.test(m.text())) real409 += 1; else errors.push(m.text()); } });
   page.on('dialog', (d) => d.dismiss());
   const shot = (name) => page.screenshot({ path: path.join(shots, `${name}.png`), fullPage: true });
   const status = () => page.getByTestId('run-status').innerText();
@@ -83,24 +83,24 @@ try {
   check(covered.length === 0, `no message label covers its arrow${covered.length ? `: ${covered.join(', ')}` : ''}`);
   await shot('1-ready-light');
 
-  // Banner, Mock | Live toggle and Reset in the header on every tab
+  // Banner, Mock | Real toggle and Reset in the header on every tab
   for (const name of ['Interlocks', 'What is real', 'Sequence']) {
     await page.getByRole('button', { name, exact: true }).click();
     check(await page.getByTestId('sim-banner').isVisible(), `banner visible on the ${name} tab`);
-    check(await page.getByTestId('mode-mock').isVisible() && (await page.getByTestId('mode-mock').getAttribute('aria-pressed')) === 'true' && (await page.getByTestId('mode-live').getAttribute('aria-pressed')) === 'false' && await page.getByTestId('reset').isVisible(), `Mock | Live toggle (Mock pressed) and Reset in the header on the ${name} tab`);
+    check(await page.getByTestId('mode-mock').isVisible() && (await page.getByTestId('mode-mock').getAttribute('aria-pressed')) === 'true' && (await page.getByTestId('mode-real').getAttribute('aria-pressed')) === 'false' && await page.getByTestId('reset').isVisible(), `Mock | Real toggle (Mock pressed) and Reset in the header on the ${name} tab`);
     check(/MOCK mode/.test(await page.getByTestId('sim-banner').innerText()), `the banner names the Mock mode on the ${name} tab`);
   }
   check(await page.locator('main').count() === 1, 'one main landmark');
-  // Live is refused with an honest message and the page stays in Mock
-  await page.getByTestId('mode-live').click();
+  // Real is refused with an honest message and the page stays in Mock
+  await page.getByTestId('mode-real').click();
   await page.getByTestId('mode-note').filter({ hasText: 'Live mode is not available' }).waitFor({ timeout: 15000 });
-  check(/stays in Mock mode/.test(await page.getByTestId('mode-note').innerText()) && (await page.getByTestId('mode-mock').getAttribute('aria-pressed')) === 'true' && /MODE: MOCK/.test(await page.getByTestId('mode-header').innerText()), 'Live is refused with the honest message and the page stays in Mock');
-  check(live409 === 1, `the deliberate 409 shows as one console message (${live409})`);
+  check(/stays in Mock mode/.test(await page.getByTestId('mode-note').innerText()) && (await page.getByTestId('mode-mock').getAttribute('aria-pressed')) === 'true' && /MODE: MOCK/.test(await page.getByTestId('mode-header').innerText()), 'Real is refused with the honest message and the page stays in Mock');
+  check(real409 === 1, `the deliberate 409 shows as one console message (${real409})`);
   await page.getByTestId('mode-mock').click();
   check((await page.getByTestId('mode-note').innerText()) === '', 'choosing Mock clears the note');
   // P and Esc
   await page.keyboard.press('p');
-  check((await page.getByTestId('presenter').getAttribute('aria-pressed')) === 'true' && await page.getByTestId('sim-banner').isVisible() && await page.getByTestId('mode-live').isVisible(), 'P turns presenter mode on; the banner and the Mock | Live toggle stay');
+  check((await page.getByTestId('presenter').getAttribute('aria-pressed')) === 'true' && await page.getByTestId('sim-banner').isVisible() && await page.getByTestId('mode-real').isVisible(), 'P turns presenter mode on; the banner and the Mock | Real toggle stay');
   await page.keyboard.press('Control+p');
   check((await page.getByTestId('presenter').getAttribute('aria-pressed')) === 'true', 'Ctrl+P is ignored');
   await page.keyboard.press('Escape');
@@ -238,7 +238,7 @@ try {
   await shot('8-mobile-light');
 
   check(external.length === 0, `no off-origin requests${external.length ? `: ${external.join(', ')}` : ''}`);
-  check(live409 >= 1, `Live was refused ${live409} time(s) in total`);
+  check(real409 >= 1, `Real was refused ${real409} time(s) in total`);
   check(errors.length === 0, `no console errors${errors.length ? `: ${errors.join(' | ')}` : ''}`);
 } catch (e) {
   console.error(e);

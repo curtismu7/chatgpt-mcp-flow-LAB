@@ -13,8 +13,9 @@ async function call(method, path, body) {
 }
 export const getFlow = () => call("GET", "/api/flow");
 export const getHealth = () => call("GET", "/api/health");
+export const getInfo = () => call("GET", "/api/info");
 export const postRun = (mistake) => call("POST", "/api/runs", { mistake: mistake ?? null });
 export const postReset = () => call("POST", "/api/reset", {});
 export const getDiagram = (name = "authorization-flow") => call("GET", `/api/diagram?name=${encodeURIComponent(name)}`);
-// Live is refused by the server (409 live_not_supported) with the honest message, which call() throws as the Error message.
-export const postMode = (mode) => call("POST", "/api/mode", { mode });
+// Real is refused by the server (409 real_not_available) with the honest message, which call() throws as the Error message.
+export const postMode = (source) => call("POST", "/api/mode", { source });

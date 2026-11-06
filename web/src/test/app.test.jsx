@@ -4,12 +4,12 @@ import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-libra
 import { DIAGRAM, FLOW, HAPPY, refusedRun } from "./fixtures.js";
 
 vi.mock("../lib/api.js", () => ({
-  getFlow: vi.fn(), getHealth: vi.fn(), getDiagram: vi.fn(), postMode: vi.fn(), postRun: vi.fn(), postReset: vi.fn(),
+  getFlow: vi.fn(), getHealth: vi.fn(), getDiagram: vi.fn(), getInfo: vi.fn(), postMode: vi.fn(), postRun: vi.fn(), postReset: vi.fn(),
 }));
 import * as api from "../lib/api.js";
 import App from "../App.jsx";
 
-const LIVE_MESSAGE = "Live mode is not available in this lab: every actor is an in-process mock on 127.0.0.1 and no real provider is configured or contacted, so the page stays in Mock mode.";
+const REAL_MESSAGE = "Live mode is not available in this lab: every actor is an in-process mock on 127.0.0.1 and no real provider is configured or contacted, so the page stays in Mock mode.";
 const mount = async () => {
   render(<App baseMs={1000} />);
   await screen.findByTestId("simulate");
@@ -20,7 +20,8 @@ beforeEach(() => {
   api.getFlow.mockResolvedValue(FLOW);
   api.getHealth.mockResolvedValue({ state: "ready", runtime: "offline" });
   api.getDiagram.mockResolvedValue(DIAGRAM);
-  api.postMode.mockRejectedValue(new Error(LIVE_MESSAGE));
+  api.postMode.mockRejectedValue(new Error(REAL_MESSAGE));
+  api.getInfo.mockResolvedValue({ source: "mock", realAvailable: false, realReason: REAL_MESSAGE });
   api.postRun.mockResolvedValue(HAPPY);
   api.postReset.mockResolvedValue({ ok: true });
 });
@@ -194,18 +195,18 @@ describe("simulation", () => {
   });
 });
 
-describe("Mock | Live toggle, presenter keys, Reset and aria-disabled", () => {
-  it("shows the Mock | Live toggle in the header on every tab and in presenter mode; Mock is pressed", async () => {
+describe("Mock | Real toggle, presenter keys, Reset and aria-disabled", () => {
+  it("shows the Mock | Real toggle in the header on every tab and in presenter mode; Mock is pressed", async () => {
     await mount();
     const check = () => {
-      for (const id of ["mode-mock", "mode-live"]) { // a hidden attribute or a disabled button would break the rule that both modes are always offered
+      for (const id of ["mode-mock", "mode-real"]) { // a hidden attribute or a disabled button would break the rule that both modes are always offered
         expect(screen.getByTestId(id)).toBeVisible();
         expect(screen.getByTestId(id)).toBeEnabled();
         expect(screen.getByTestId(id)).not.toHaveAttribute("hidden");
         expect(screen.getByTestId(id).closest("[hidden],[aria-hidden='true']")).toBeNull();
       }
       expect(screen.getByTestId("mode-mock")).toHaveAttribute("aria-pressed", "true");
-      expect(screen.getByTestId("mode-live")).toHaveAttribute("aria-pressed", "false");
+      expect(screen.getByTestId("mode-real")).toHaveAttribute("aria-pressed", "false");
       expect(screen.getByTestId("mode-header")).toHaveTextContent("MODE: MOCK");
       expect(screen.getByTestId("sim-banner")).toHaveTextContent(/MOCK mode/);
       expect(screen.getByTestId("reset")).toBeInTheDocument();
@@ -214,15 +215,17 @@ describe("Mock | Live toggle, presenter keys, Reset and aria-disabled", () => {
     fireEvent.click(screen.getByTestId("presenter"));
     check();
   });
-  it("Live is refused with the server's honest message and the page stays in Mock", async () => {
+  it("Real is refused with the server's honest message and the page stays in Mock; the disabled Real button carries the how-to tooltip", async () => {
     await mount();
     expect(screen.getByTestId("mode-note")).toBeEmptyDOMElement();
-    fireEvent.click(screen.getByTestId("mode-live"));
+    expect(screen.getByTestId("mode-real")).toHaveAttribute("aria-disabled", "true");
+    expect(screen.getByTestId("mode-real")).toHaveAttribute("title", REAL_MESSAGE);
+    fireEvent.click(screen.getByTestId("mode-real"));
     await waitFor(() => expect(screen.getByTestId("mode-note")).toHaveTextContent(/Live mode is not available/));
-    expect(api.postMode).toHaveBeenCalledWith("live");
+    expect(api.postMode).toHaveBeenCalledWith("real");
     expect(screen.getByTestId("mode-note")).toHaveTextContent(/stays in Mock mode/);
     expect(screen.getByTestId("mode-mock")).toHaveAttribute("aria-pressed", "true");
-    expect(screen.getByTestId("mode-live")).toHaveAttribute("aria-pressed", "false");
+    expect(screen.getByTestId("mode-real")).toHaveAttribute("aria-pressed", "false");
     expect(screen.getByTestId("mode-header")).toHaveTextContent("MODE: MOCK");
     fireEvent.click(screen.getByTestId("mode-mock"));
     expect(screen.getByTestId("mode-note")).toBeEmptyDOMElement();
