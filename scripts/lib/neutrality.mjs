@@ -24,9 +24,12 @@ export const BUILTIN = [
 const ALLOWED_HOST = /(^|\.)(example|invalid)$|^localhost$|^127\.0\.0\.1$|^\[::1\]$|^\$\{?[A-Z_]+/;
 const ALLOWED_GITHUB_PATH = /^\/(curtismu7\/chatgpt-mcp-flow-LAB(?:\.git)?(?![A-Za-z0-9._-])|gitleaks\/gitleaks\/releases\/download\/)/;
 const URL_RE = /\bhttps?:\/\/(?:[^\s/@'"`]*@)?([A-Za-z0-9.[\]-]+)(\/[^\s'"`)>\]]*)?/g;
+// the family UI guard (scripts/check-ui-standard.sh) downloads the canonical stylesheet from exactly this URL
+const ALLOWED_RAW_PATH = /^\/curtismu7\/AI-DEMO-Standalone\/main\/shared\/standalone-ui\.css(?:\}|$)/;
 export const urlAllowed = (host, urlPath = '') => {
   const h = host.replace(/\.$/, '');
   if (h.toLowerCase() === 'github.com') return ALLOWED_GITHUB_PATH.test(urlPath);
+  if (h.toLowerCase() === 'raw.githubusercontent.com') return ALLOWED_RAW_PATH.test(urlPath);
   return ALLOWED_HOST.test(h);
 };
 
