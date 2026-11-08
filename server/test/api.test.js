@@ -194,3 +194,15 @@ test('POST /api/mode refuses anything else: other values, extra fields, the old 
   assert.equal((await request(port, 'PUT', '/api/mode', { body: { source: 'mock' } })).status, 405);
   assert.equal((await request(port, 'POST', '/api/mode', { body: { source: 'real' }, headers: { origin: 'https://evil.example' } })).status, 403);
 });
+
+test('GET /api/shelf answers with the configured SHELF_URL (no web build needed) and is GET only', async () => {
+  const prev = process.env.SHELF_URL;
+  process.env.SHELF_URL = 'https://shelf.example:8443/';
+  try {
+    const r = await request(port, 'GET', '/api/shelf');
+    assert.equal(r.status, 200);
+    assert.equal(r.headers['cache-control'], 'no-store');
+    assert.deepEqual(r.json, { shelfUrl: 'https://shelf.example:8443' });
+    assert.notEqual((await request(port, 'POST', '/api/shelf', { body: {} })).status, 200);
+  } finally { if (prev === undefined) delete process.env.SHELF_URL; else process.env.SHELF_URL = prev; }
+});
