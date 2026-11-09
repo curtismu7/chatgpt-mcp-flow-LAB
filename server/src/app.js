@@ -8,7 +8,7 @@ import { loadConfig } from './config.js';
 import { createHealth } from './health.js';
 import { createRuntime } from './runtime.js';
 import { MISTAKES, MISTAKE_IDS, PARTICIPANTS, PHASES, PROVENANCE, STANDARDS, STEPS } from './definition.js';
-import { assertBindAllowed, bindHost, credentialGuard, hostGuard, originGuard, serverPort, stubBase } from './safety.js';
+import { assertBindAllowed, bindHost, credentialGuard, makeHostGuard, makeOriginGuard, parseAllowedHosts, serverPort, stubBase } from './safety.js';
 import { DEFAULT_DIAGRAM, DIAGRAM_NAMES, diagramByName } from './diagramData.js';
 import { shelfInfo } from './shelfLink.js';
 
@@ -33,12 +33,12 @@ export const FLOW_METADATA = Object.freeze({
 });
 
 // webDist: the built UI (web/dist). null (the default, so API tests never depend on a build) disables static serving.
-export function createApp({ runtime, health = createHealth(), webDist = null, config = loadConfig() } = {}) {
+export function createApp({ runtime, health = createHealth(), webDist = null, config = loadConfig(), allowedHosts = parseAllowedHosts(), port = serverPort() } = {}) {
   const app = express();
   app.disable('x-powered-by');
-  app.use(hostGuard);
+  app.use(makeHostGuard({ allowed: allowedHosts, port }));
   app.use(credentialGuard);
-  app.use(originGuard);
+  app.use(makeOriginGuard({ allowed: allowedHosts, port }));
   app.use((_req, res, next) => { res.set(API_HEADERS); next(); });
   if (webDist && fs.existsSync(path.join(webDist, 'index.html'))) {
     app.use(express.static(webDist, {
@@ -120,11 +120,12 @@ export function createApp({ runtime, health = createHealth(), webDist = null, co
 
 // Boot on `port`. Refuses a non-loopback host unless MCP_FLOW_BIND is set.
 export async function startHttpServer({ port = serverPort(), host = bindHost(), env = process.env, runtime, webDist = DEFAULT_WEB_DIST, config = loadConfig({ env }) } = {}) {
+  const allowedHosts = parseAllowedHosts(env); // the lab-proxy's names; before any server or timer starts
   assertBindAllowed(host, env);
   const rt = runtime || await createRuntime({ stubBase: stubBase(env), workspace: config.workspace });
   const health = createHealth({ env });
   return new Promise((resolve, reject) => {
-    const httpServer = createApp({ runtime: rt, health, webDist, config }).listen(port, host);
+    const httpServer = createApp({ runtime: rt, health, webDist, config, allowedHosts, port }).listen(port, host);
     httpServer.once('error', async (e) => { health.stop(); await rt.close(); reject(e); });
     httpServer.once('listening', () => {
       const { port: bound } = httpServer.address();

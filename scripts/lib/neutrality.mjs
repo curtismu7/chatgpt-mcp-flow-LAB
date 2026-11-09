@@ -21,7 +21,8 @@ export const BUILTIN = [
 ];
 // github.com is NOT an allowed host. Only two exact URL prefixes are allowed: this repo's own curtismu7 URL in the docs,
 // and the gitleaks release download in ci.yml. Any other github.com URL (for example a real customer org) is a finding.
-const ALLOWED_HOST = /(^|\.)(example|invalid)$|^localhost$|^127\.0\.0\.1$|^\[::1\]$|^\$\{?[A-Z_]+/;
+// local.ping-devops.com: the family lab-proxy's public origin (rulebook: labs are reached at https://local.ping-devops.com:8443).
+const ALLOWED_HOST = /(^|\.)(example|invalid)$|^localhost$|^127\.0\.0\.1$|^\[::1\]$|^\$\{?[A-Z_]+|^local\.ping-devops\.com$/;
 const ALLOWED_GITHUB_PATH = /^\/(curtismu7\/chatgpt-mcp-flow-LAB(?:\.git)?(?![A-Za-z0-9._-])|gitleaks\/gitleaks\/releases\/download\/)/;
 const URL_RE = /\bhttps?:\/\/(?:[^\s/@'"`]*@)?([A-Za-z0-9.[\]-]+)(\/[^\s'"`)>\]]*)?/g;
 // the family UI guard (scripts/check-ui-standard.sh) downloads the canonical stylesheet from exactly this URL

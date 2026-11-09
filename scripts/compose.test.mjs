@@ -94,3 +94,9 @@ test('the image ships the diagram data the server loads by name, and the setting
   assert.doesNotMatch(df, /COPY[^\n]*\.env\b/);
   assert.match(fs.readFileSync(new URL('../.dockerignore', import.meta.url), 'utf8'), /^\.env$/m);
 });
+
+test('docker-compose.yml allows the lab-proxy name for this lab by default, never the bare proxy name', () => {
+  const m = /LAB_ALLOWED_HOSTS: \$\{LAB_ALLOWED_HOSTS:-([^}]*)\}/.exec(compose);
+  assert.ok(m, 'LAB_ALLOWED_HOSTS has a default');
+  assert.deepEqual(m[1].split(',').map((n) => n.trim()), ['chatgpt-mcp-flow.local.ping-devops.com']);
+});
