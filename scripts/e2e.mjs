@@ -92,12 +92,13 @@ try {
   }
   check(await page.locator('main').count() === 1, 'one main landmark');
   // Real is refused with an honest message and the page stays in Mock
-  await page.getByTestId('mode-real').click();
-  await page.getByTestId('mode-note').filter({ hasText: 'Live mode is not available' }).waitFor({ timeout: 15000 });
-  check(/stays in Mock mode/.test(await page.getByTestId('mode-note').innerText()) && (await page.getByTestId('mode-mock').getAttribute('aria-pressed')) === 'true' && /MODE: MOCK/.test(await page.getByTestId('mode-header').innerText()), 'Real is refused with the honest message and the page stays in Mock');
-  check(real409 === 1, `the deliberate 409 shows as one console message (${real409})`);
+  // Real is shown but disabled (aria-disabled, still focusable) and its title says why; the page stays in Mock.
+  await page.waitForFunction(() => document.querySelector('[data-testid="mode-real"]')?.getAttribute('aria-disabled') === 'true', null, { timeout: 15000 });
+  const realTitle = (await page.getByTestId('mode-real').getAttribute('title')) || '';
+  check(/Live mode is not available/.test(realTitle), `Real is disabled and its title explains why: "${realTitle.slice(0, 80)}"`);
+  check((await page.getByTestId('mode-mock').getAttribute('aria-pressed')) === 'true' && (await page.getByTestId('mode-real').getAttribute('aria-pressed')) === 'false' && /MODE: MOCK/.test(await page.getByTestId('mode-header').innerText()), 'the page stays in Mock');
   await page.getByTestId('mode-mock').click();
-  check((await page.getByTestId('mode-note').innerText()) === '', 'choosing Mock clears the note');
+  check((await page.getByTestId('mode-note').innerText()) === '', 'choosing Mock leaves no note');
   // P and Esc
   await page.keyboard.press('p');
   check((await page.getByTestId('presenter').getAttribute('aria-pressed')) === 'true' && await page.getByTestId('sim-banner').isVisible() && await page.getByTestId('mode-real').isVisible(), 'P turns presenter mode on; the banner and the Mock | Real toggle stay');
@@ -212,7 +213,7 @@ try {
   await page.getByTestId('presenter').click();
 
   // Dark theme
-  await page.getByRole('button', { name: /Switch to dark theme/ }).click();
+  await page.getByTestId('theme').selectOption('dark');
   check((await page.evaluate(() => document.documentElement.dataset.theme)) === 'dark', 'theme toggles to dark');
   await page.getByTestId('frame-14').click();
   await settle(page);
@@ -225,7 +226,7 @@ try {
   await page.setViewportSize({ width: 375, height: 844 });
   await settle(page);
   for (const theme of ['dark', 'light']) {
-    if (theme === 'light') await page.getByRole('button', { name: /Switch to light theme/ }).click();
+    if (theme === 'light') await page.getByTestId('theme').selectOption('light');
     for (const name of ['Sequence', 'Interlocks', 'What is real']) {
       await page.getByRole('button', { name, exact: true }).click();
       const w = await page.evaluate(() => ({ s: document.documentElement.scrollWidth, c: document.documentElement.clientWidth }));
@@ -238,7 +239,7 @@ try {
   await shot('8-mobile-light');
 
   check(external.length === 0, `no off-origin requests${external.length ? `: ${external.join(', ')}` : ''}`);
-  check(real409 >= 1, `Real was refused ${real409} time(s) in total`);
+  check(real409 === 0, `the disabled Real button sent no refused request (${real409})`);
   check(errors.length === 0, `no console errors${errors.length ? `: ${errors.join(' | ')}` : ''}`);
 } catch (e) {
   console.error(e);
