@@ -2,7 +2,8 @@
 //  1. Bind loopback only, unless MCP_FLOW_BIND opts in (the container does).
 //  2. Every port this app uses is in 6650-6699: the control server on 6650, the five mock actors on 6651-6655.
 //  3. Actors only ever talk to each other over 127.0.0.1 on those ports (wire.js enforces it). There is no URL input anywhere.
-//  4. Only loopback hosts are Host-header-accepted; no credential header is accepted by the control API.
+//  4. Only loopback hosts are Host-header-accepted, plus LAB_ALLOWED_HOSTS names with this lab's port on the control API (the
+//     lab-proxy's name for this app); no credential header is accepted by the control API.
 
 export const PORT_MIN = 6650;
 export const PORT_MAX = 6699;
@@ -40,12 +41,35 @@ export function parseHost(hostHeader) {
   return { hostname: m[1].toLowerCase().replace(/^\[|\]$/g, ''), port: m[2] === undefined ? null : Number(m[2]), host: `${m[1]}${m[2] === undefined ? '' : `:${m[2]}`}`.toLowerCase() };
 }
 
-// Rejects a missing, malformed or non-loopback Host header (DNS rebinding): 421 Misdirected Request.
-export function hostGuard(req, res, next) {
-  if (!req.headers.host || !parseHost(req.headers.host)) {
-    return res.status(421).json({ error: 'bad_host', message: 'this server answers loopback Host headers only' });
-  }
-  return next();
+// LAB_ALLOWED_HOSTS: comma-separated host names (no port) the family lab-proxy sends in Host. Unset = loopback only.
+// Parsed once, before the server starts; a malformed entry stops the start.
+export function parseAllowedHosts(env = process.env) {
+  const names = String(env.LAB_ALLOWED_HOSTS || '').split(',').map((n) => n.trim().toLowerCase()).filter(Boolean);
+  for (const n of names) if (!/^[a-z0-9](?:[a-z0-9-]*[a-z0-9])?(?:\.[a-z0-9](?:[a-z0-9-]*[a-z0-9])?)*$/.test(n)) throw new Error(`LAB_ALLOWED_HOSTS: "${n.slice(0, 40)}" is not a host name`);
+  return new Set(names);
+}
+// The Hosts that may carry the lab-proxy's forwarded origin: each allowed name with this lab's port. Never loopback.
+export const proxyHostSet = (allowed = new Set(), port = SERVER_PORT) => new Set([...allowed].map((n) => `${n}:${port}`));
+
+// Rejects a missing, malformed or non-loopback Host header (DNS rebinding): 421 Misdirected Request. An allowed name with
+// this lab's port is also accepted.
+export const makeHostGuard = ({ allowed = new Set(), port = SERVER_PORT } = {}) => {
+  const proxyHosts = proxyHostSet(allowed, port);
+  return function hostGuard(req, res, next) {
+    if (!req.headers.host || !(parseHost(req.headers.host) || proxyHosts.has(String(req.headers.host).toLowerCase()))) {
+      return res.status(421).json({ error: 'bad_host', message: 'this server answers loopback Host headers only' });
+    }
+    return next();
+  };
+};
+export const hostGuard = makeHostGuard();
+
+// Behind the lab-proxy the browser's Origin is the proxy's (https://local.ping-devops.com:8443) while Host is this lab's
+// allowed name. X-Forwarded-Host/-Proto are believed only on such a Host, so a request on any other Host cannot use them.
+export function isProxiedSameOrigin(headers, proxyHosts) {
+  const xfh = String(headers['x-forwarded-host'] || '').trim().toLowerCase();
+  const xfp = String(headers['x-forwarded-proto'] || '').trim().toLowerCase();
+  return proxyHosts.has(String(headers.host || '').toLowerCase()) && xfh !== '' && (xfp === 'https' || xfp === 'http') && headers.origin === `${xfp}://${xfh}`;
 }
 
 // CSRF defence for anything that is not a plain read. A page on another site can send a "simple" POST to
@@ -54,23 +78,27 @@ export function hostGuard(req, res, next) {
 //  - an Origin header must be an http loopback origin identical to the Host the request was sent to;
 //  - a request with a body must be application/json.
 const READ_METHODS = new Set(['GET', 'HEAD', 'OPTIONS']);
-export function originGuard(req, res, next) {
-  if (READ_METHODS.has(req.method)) return next();
-  const refuse = (status, error, message) => res.status(status).json({ error, message });
-  if (String(req.headers['sec-fetch-site'] || '').toLowerCase() === 'cross-site') return refuse(403, 'cross_site_refused', 'cross-site requests are refused');
-  const origin = req.headers.origin;
-  if (origin !== undefined) {
-    let u = null;
-    try { u = new URL(origin); } catch { /* refused below */ }
-    const host = parseHost(req.headers.host);
-    const same = u && u.protocol === 'http:' && u.origin !== 'null' && isLoopbackHost(u.hostname) && host
-      && u.host.toLowerCase() === host.host && !u.username && !u.password && u.pathname === '/' && origin === u.origin;
-    if (!same) return refuse(403, 'bad_origin', 'this server accepts same-origin loopback requests only');
-  }
-  const hasBody = Number(req.headers['content-length'] || 0) > 0 || req.headers['transfer-encoding'] !== undefined;
-  if (hasBody && !/^application\/json\s*(;|$)/i.test(req.headers['content-type'] || '')) return refuse(415, 'unsupported_media_type', 'a request body must be application/json');
-  return next();
-}
+export const makeOriginGuard = ({ allowed = new Set(), port = SERVER_PORT } = {}) => {
+  const proxyHosts = proxyHostSet(allowed, port);
+  return function originGuard(req, res, next) {
+    if (READ_METHODS.has(req.method)) return next();
+    const refuse = (status, error, message) => res.status(status).json({ error, message });
+    if (String(req.headers['sec-fetch-site'] || '').toLowerCase() === 'cross-site') return refuse(403, 'cross_site_refused', 'cross-site requests are refused');
+    const origin = req.headers.origin;
+    if (origin !== undefined) {
+      let u = null;
+      try { u = new URL(origin); } catch { /* refused below */ }
+      const host = parseHost(req.headers.host);
+      const same = isProxiedSameOrigin(req.headers, proxyHosts) || u && u.protocol === 'http:' && u.origin !== 'null' && isLoopbackHost(u.hostname) && host
+        && u.host.toLowerCase() === host.host && !u.username && !u.password && u.pathname === '/' && origin === u.origin;
+      if (!same) return refuse(403, 'bad_origin', 'this server accepts same-origin loopback requests only');
+    }
+    const hasBody = Number(req.headers['content-length'] || 0) > 0 || req.headers['transfer-encoding'] !== undefined;
+    if (hasBody && !/^application\/json\s*(;|$)/i.test(req.headers['content-type'] || '')) return refuse(415, 'unsupported_media_type', 'a request body must be application/json');
+    return next();
+  };
+};
+export const originGuard = makeOriginGuard();
 
 // The control API accepts no credential. A request that carries one is refused, not ignored.
 // (The mock actors DO exchange mock bearer tokens with each other; that is a different listener and never this API.)

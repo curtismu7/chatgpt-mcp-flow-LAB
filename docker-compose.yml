@@ -13,6 +13,8 @@ services:
       SHELF_URL: ${SHELF_URL:-http://127.0.0.1:4400}
       MCP_FLOW_PORT: "6650"
       MCP_FLOW_BIND: 0.0.0.0
+      # The name the family lab-proxy (https://local.ping-devops.com:8443) sends in Host; loopback always works.
+      LAB_ALLOWED_HOSTS: ${LAB_ALLOWED_HOSTS:-chatgpt-mcp-flow.local.ping-devops.com}
     read_only: true
     cap_drop: [ALL]
     security_opt: ["no-new-privileges:true"]

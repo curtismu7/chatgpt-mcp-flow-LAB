@@ -5,7 +5,7 @@ import net from 'node:net';
 import { createApp } from '../src/app.js';
 import { createHealth } from '../src/health.js';
 import { createRuntime } from '../src/runtime.js';
-import { originGuard, parseHost } from '../src/safety.js';
+import { hostGuard, makeHostGuard, makeOriginGuard, originGuard, parseAllowedHosts, parseHost } from '../src/safety.js';
 import { GUARDS_CONTROL_PORT, freeBase, request } from './helpers.js';
 
 let rt; let health; let server; let port;
@@ -90,4 +90,35 @@ test('JSON-only: a chunked body, or a content type that merely starts with appli
 test('Origin scheme and path: only an http loopback origin that equals the Host passes', () => {
   assert.equal(guard({ host: '127.0.0.1:6650', origin: 'http://127.0.0.1:6650' }).passed, true);
   for (const origin of ['https://127.0.0.1:6650', 'ftp://127.0.0.1:6650', 'http://127.0.0.1:6651', 'http://localhost:6650', 'null', 'http://127.0.0.1:6650/x', 'http://u:p@127.0.0.1:6650']) assert.equal(guard({ host: '127.0.0.1:6650', origin }).code, 403, origin);
+});
+
+// Behind the family lab-proxy (https://local.ping-devops.com:8443): Host is this lab's LAB_ALLOWED_HOSTS name with its port,
+// the browser's Origin is the proxy's, and the proxy says so in X-Forwarded-Host/-Proto.
+test('lab-proxy: LAB_ALLOWED_HOSTS parsing, launcher Host, proxied writes, and what stays refused', () => {
+  assert.deepEqual([...parseAllowedHosts({})], []);
+  assert.deepEqual([...parseAllowedHosts({ LAB_ALLOWED_HOSTS: ' ChatGPT-MCP-Flow.local.ping-devops.com , ' })], ['chatgpt-mcp-flow.local.ping-devops.com']);
+  for (const bad of ['a.example:6650', 'https://a.example', 'a b']) assert.throws(() => parseAllowedHosts({ LAB_ALLOWED_HOSTS: bad }), /not a host name/);
+  const name = 'chatgpt-mcp-flow.local.ping-devops.com';
+  const opts = { allowed: parseAllowedHosts({ LAB_ALLOWED_HOSTS: name }), port: 6650 };
+  const run = (mw, headers, method = 'POST') => { const res = fakeRes(); let passed = false; mw({ method, headers }, res, () => { passed = true; }); return { passed, code: res.code }; };
+  const hg = makeHostGuard(opts);
+  const og = makeOriginGuard(opts);
+  // launcher Host accepted; loopback still accepted
+  assert.equal(run(hg, { host: `${name}:6650` }, 'GET').passed, true);
+  assert.equal(run(hg, { host: '127.0.0.1:6650' }, 'GET').passed, true);
+  // a Host outside the set is refused: the bare proxy name, another name, the right name on another port, no port; unset = loopback only
+  for (const host of ['local.ping-devops.com:6650', 'local.ping-devops.com:8443', 'evil.example:6650', `${name}:6651`, name]) assert.equal(run(hg, { host }, 'GET').code, 421, host);
+  assert.equal(run(hostGuard, { host: `${name}:6650` }, 'GET').code, 421);
+  // proxied same-origin write accepted
+  const proxied = { host: `${name}:6650`, 'x-forwarded-host': 'local.ping-devops.com:8443', 'x-forwarded-proto': 'https', 'sec-fetch-site': 'same-origin', 'content-length': '2', 'content-type': 'application/json' };
+  assert.equal(run(og, { ...proxied, origin: 'https://local.ping-devops.com:8443' }).passed, true);
+  // foreign Origin refused, and an Origin that does not match the forwarded host or scheme
+  for (const origin of ['https://evil.example', 'http://local.ping-devops.com:8443', 'https://local.ping-devops.com']) assert.equal(run(og, { ...proxied, origin }).code, 403, origin);
+  assert.equal(run(og, { ...proxied, 'x-forwarded-proto': 'ftp', origin: 'ftp://local.ping-devops.com:8443' }).code, 403);
+  assert.equal(run(og, { ...proxied, 'x-forwarded-host': '', origin: 'https://' }).code, 403);
+  // forwarded headers on a loopback Host are ignored
+  assert.equal(run(og, { ...proxied, host: '127.0.0.1:6650', origin: 'https://local.ping-devops.com:8443' }).code, 403);
+  assert.equal(run(og, { ...proxied, host: 'localhost:6650', 'x-forwarded-host': 'evil.example', origin: 'https://evil.example' }).code, 403);
+  // and without LAB_ALLOWED_HOSTS the proxy's origin is never believed
+  assert.equal(guard({ ...proxied, origin: 'https://local.ping-devops.com:8443' }).code, 403);
 });
