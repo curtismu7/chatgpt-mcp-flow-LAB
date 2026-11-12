@@ -199,14 +199,13 @@ describe("Mock | Real toggle, presenter keys, Reset and aria-disabled", () => {
   it("shows the Mock | Real toggle in the header on every tab and in presenter mode; Mock is pressed", async () => {
     await mount();
     const check = () => {
-      for (const id of ["mode-mock", "mode-real"]) { // a hidden attribute or a disabled button would break the rule that both modes are always offered
-        expect(screen.getByTestId(id)).toBeVisible();
-        expect(screen.getByTestId(id)).toBeEnabled();
-        expect(screen.getByTestId(id)).not.toHaveAttribute("hidden");
-        expect(screen.getByTestId(id).closest("[hidden],[aria-hidden='true']")).toBeNull();
-      }
-      expect(screen.getByTestId("mode-mock")).toHaveAttribute("aria-pressed", "true");
-      expect(screen.getByTestId("mode-real")).toHaveAttribute("aria-pressed", "false");
+      const sel = screen.getByTestId("mode-select"); // a hidden attribute or a disabled option would break the rule that both modes are always offered
+      expect(sel).toBeVisible();
+      expect(sel).toBeEnabled();
+      expect(sel).not.toHaveAttribute("hidden");
+      expect(sel.closest("[hidden],[aria-hidden='true']")).toBeNull();
+      expect(sel).toHaveValue("mock");
+      expect(screen.getByRole("option", { name: "Real" })).toHaveAttribute("disabled"); // the server's honest answer: this lab has no Real
       expect(screen.getByTestId("mode-header")).toHaveTextContent("MODE: MOCK");
       expect(screen.getByTestId("sim-banner")).toHaveTextContent(/MOCK mode/);
       expect(screen.getByTestId("reset")).toBeInTheDocument();
@@ -215,19 +214,20 @@ describe("Mock | Real toggle, presenter keys, Reset and aria-disabled", () => {
     fireEvent.click(screen.getByTestId("presenter"));
     check();
   });
-  it("Real is refused with the server's honest message and the page stays in Mock; the disabled Real button carries the how-to tooltip", async () => {
+  it("Real is refused with the server's honest message and the page stays in Mock; the disabled Real option carries the how-to tooltip", async () => {
     await mount();
     expect(screen.getByTestId("mode-note")).toBeEmptyDOMElement();
-    expect(screen.getByTestId("mode-real")).toHaveAttribute("aria-disabled", "true");
-    expect(screen.getByTestId("mode-real")).toHaveAttribute("title", REAL_MESSAGE);
-    fireEvent.click(screen.getByTestId("mode-real"));
+    const realOption = screen.getByRole("option", { name: "Real" });
+    expect(realOption).toHaveAttribute("disabled");
+    expect(realOption).toHaveAttribute("title", REAL_MESSAGE);
+    fireEvent.change(screen.getByTestId("mode-select"), { target: { value: "real" } });
     await waitFor(() => expect(screen.getByTestId("mode-note")).toHaveTextContent(/Live mode is not available/));
     expect(api.postMode).toHaveBeenCalledWith("real");
     expect(screen.getByTestId("mode-note")).toHaveTextContent(/stays in Mock mode/);
-    expect(screen.getByTestId("mode-mock")).toHaveAttribute("aria-pressed", "true");
-    expect(screen.getByTestId("mode-real")).toHaveAttribute("aria-pressed", "false");
+    expect(screen.getByTestId("mode-select")).toHaveValue("mock");
+    expect(screen.getByRole("option", { name: "Real" })).toHaveAttribute("disabled");
     expect(screen.getByTestId("mode-header")).toHaveTextContent("MODE: MOCK");
-    fireEvent.click(screen.getByTestId("mode-mock"));
+    fireEvent.change(screen.getByTestId("mode-select"), { target: { value: "mock" } });
     expect(screen.getByTestId("mode-note")).toBeEmptyDOMElement();
   });
   it("P toggles presenter mode, Esc leaves it, the banner stays, and modifier keys and typing are ignored", async () => {

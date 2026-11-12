@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import TopMenu, { applyFontSize } from "./top-menu/TopMenu.jsx";
 import ShelfLink from "./components/ShelfLink.jsx";
 import { getDiagram, getFlow, getHealth, getInfo, postMode, postReset, postRun } from "./lib/api.js";
 import { STATUS_WORD } from "./lib/phases.js";
@@ -15,6 +16,10 @@ const initialTheme = () => {
   const t = safe(() => localStorage.getItem("mcpflow-theme"), null);
   return ["auto", "light", "dark"].includes(t) ? t : "auto";
 };
+const initialFont = () => {
+  const f = safe(() => localStorage.getItem("mcpflow-font"), null);
+  return ["S", "M", "L"].includes(f) ? f : "M";
+};
 export const BASE_MS = 1700;
 const SPEEDS = [["0.5", "0.5x"], ["1", "1x"], ["2", "2x"], ["4", "4x"]];
 const FALLBACK_BANNER = "SIMULATION, MOCK mode. Every actor here is an in-process mock on 127.0.0.1. No product, tenant or identity provider is contacted. Tokens are MOCK-ISSUED and protect nothing.";
@@ -25,6 +30,7 @@ const typing = (el) => Boolean(el) && (el.isContentEditable || /^(TEXTAREA|SELEC
 
 export default function App({ baseMs = BASE_MS }) {
   const [theme, setTheme] = useState(initialTheme);
+  const [fontStep, setFontStep] = useState(initialFont);
   const [tab, setTab] = useState("sequence");
   const [presenter, setPresenter] = useState(false);
   const [flow, setFlow] = useState(null);
@@ -50,6 +56,8 @@ export default function App({ baseMs = BASE_MS }) {
     else document.documentElement.dataset.theme = theme;
     safe(() => localStorage.setItem("mcpflow-theme", theme));
   }, [theme]);
+
+  useEffect(() => { applyFontSize(fontStep); safe(() => localStorage.setItem("mcpflow-font", fontStep)); }, [fontStep]);
 
   useEffect(() => {
     let live = true;
@@ -171,24 +179,17 @@ export default function App({ baseMs = BASE_MS }) {
       <header className="top">
         <h1>AI assistant to MCP: how the call is authorized</h1>
         <div className="top__tools">
-            <ShelfLink />
+            <TopMenu
+              mode={{ value: "mock", onChange: (v) => (v === "real" ? chooseReal() : chooseMock()), realAvailable: modeInfo ? modeInfo.realAvailable !== false : true, realHint: modeInfo?.realReason }}
+              theme={{ value: theme, onChange: setTheme }}
+              fontSize={{ value: fontStep, onChange: setFontStep }}
+              present={{ active: presenter, onToggle: togglePresenter }}
+              onReset={reset}
+            >
+              <ShelfLink />
+            </TopMenu>
           <span className="mode-badge" data-testid="mode-badge" title="This is a teaching demo">DEMO</span>
-          <div className="mode-toggle" role="group" aria-label="Mode: Mock or Real">
-            <button type="button" aria-pressed="true" onClick={chooseMock} data-testid="mode-mock">Mock</button>
-            <button type="button" aria-pressed="false" aria-disabled={modeInfo?.realAvailable === false ? "true" : undefined}
-              title={modeInfo?.realAvailable === false && modeInfo?.realReason ? modeInfo.realReason : undefined}
-              onClick={chooseReal} data-testid="mode-real">Real</button>
-          </div>
           <span className="mode-chip" data-testid="mode-header">MODE: {modeName} <span className="muted">in-process stubs on 127.0.0.1{health ? ` · health ${health.state}` : ""}</span></span>
-          <button type="button" onClick={reset} data-testid="reset">Reset</button>
-          <button type="button" aria-pressed={presenter} onClick={togglePresenter} data-testid="presenter">{presenter ? "Exit presenter (Esc)" : "Presenter (P)"}</button>
-          <label className="inline">Theme
-            <select value={theme} onChange={(e) => setTheme(e.target.value)} data-testid="theme">
-              <option value="auto">Auto</option>
-              <option value="light">Light</option>
-              <option value="dark">Dark</option>
-            </select>
-          </label>
         </div>
         <p className="top__note" role="status" aria-live="polite" data-testid="mode-note">{modeNote}</p>
       </header>
