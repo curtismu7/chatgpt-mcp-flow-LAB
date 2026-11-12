@@ -213,7 +213,7 @@ try {
   await page.getByTestId('presenter').click();
 
   // Dark theme
-  await page.getByTestId('theme').selectOption('dark');
+  await page.getByTestId('theme-select').selectOption('dark');
   check((await page.evaluate(() => document.documentElement.dataset.theme)) === 'dark', 'theme toggles to dark');
   await page.getByTestId('frame-14').click();
   await settle(page);
@@ -226,7 +226,7 @@ try {
   await page.setViewportSize({ width: 375, height: 844 });
   await settle(page);
   for (const theme of ['dark', 'light']) {
-    if (theme === 'light') await page.getByTestId('theme').selectOption('light');
+    if (theme === 'light') await page.getByTestId('theme-select').selectOption('light');
     for (const name of ['Sequence', 'Interlocks', 'What is real']) {
       await page.getByRole('button', { name, exact: true }).click();
       const w = await page.evaluate(() => ({ s: document.documentElement.scrollWidth, c: document.documentElement.clientWidth }));
