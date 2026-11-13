@@ -6,6 +6,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { loadConfig } from './config.js';
 import { createHealth } from './health.js';
+import { allPassed, runChecks as defaultChecks } from './doctor.js';
 import { createRuntime } from './runtime.js';
 import { MISTAKES, MISTAKE_IDS, PARTICIPANTS, PHASES, PROVENANCE, STANDARDS, STEPS } from './definition.js';
 import { assertBindAllowed, bindHost, credentialGuard, makeHostGuard, makeOriginGuard, parseAllowedHosts, serverPort, stubBase } from './safety.js';
@@ -33,7 +34,7 @@ export const FLOW_METADATA = Object.freeze({
 });
 
 // webDist: the built UI (web/dist). null (the default, so API tests never depend on a build) disables static serving.
-export function createApp({ runtime, health = createHealth(), webDist = null, config = loadConfig(), allowedHosts = parseAllowedHosts(), port = serverPort() } = {}) {
+export function createApp({ runtime, health = createHealth({ demoId: 'chatgpt-mcp-flow', demoName: 'AI assistant to MCP: authorization flow', version: '0.1.0', runChecks: (a) => defaultChecks(a), allPassed }), webDist = null, config = loadConfig(), allowedHosts = parseAllowedHosts(), port = serverPort() } = {}) {
   const app = express();
   app.disable('x-powered-by');
   app.use(makeHostGuard({ allowed: allowedHosts, port }));
@@ -123,7 +124,7 @@ export async function startHttpServer({ port = serverPort(), host = bindHost(), 
   const allowedHosts = parseAllowedHosts(env); // the lab-proxy's names; before any server or timer starts
   assertBindAllowed(host, env);
   const rt = runtime || await createRuntime({ stubBase: stubBase(env), workspace: config.workspace });
-  const health = createHealth({ env });
+  const health = createHealth({ demoId: 'chatgpt-mcp-flow', demoName: 'AI assistant to MCP: authorization flow', version: '0.1.0', runChecks: defaultChecks, allPassed, env });
   return new Promise((resolve, reject) => {
     const httpServer = createApp({ runtime: rt, health, webDist, config, allowedHosts, port }).listen(port, host);
     httpServer.once('error', async (e) => { health.stop(); await rt.close(); reject(e); });
