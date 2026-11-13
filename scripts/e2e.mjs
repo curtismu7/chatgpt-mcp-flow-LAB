@@ -87,21 +87,23 @@ try {
   for (const name of ['Interlocks', 'What is real', 'Sequence']) {
     await page.getByRole('button', { name, exact: true }).click();
     check(await page.getByTestId('sim-banner').isVisible(), `banner visible on the ${name} tab`);
-    check(await page.getByTestId('mode-mock').isVisible() && (await page.getByTestId('mode-mock').getAttribute('aria-pressed')) === 'true' && (await page.getByTestId('mode-real').getAttribute('aria-pressed')) === 'false' && await page.getByTestId('reset').isVisible(), `Mock | Real toggle (Mock pressed) and Reset in the header on the ${name} tab`);
+    // The shared TopMenu: a mode <select> whose value is the current mode, plus Reset.
+    check(await page.getByTestId('mode-select').isVisible() && (await page.getByTestId('mode-select').inputValue()) === 'mock' && await page.getByTestId('reset').isVisible(), `Mock | Real toggle (Mock selected) and Reset in the header on the ${name} tab`);
     check(/MOCK mode/.test(await page.getByTestId('sim-banner').innerText()), `the banner names the Mock mode on the ${name} tab`);
   }
   check(await page.locator('main').count() === 1, 'one main landmark');
   // Real is refused with an honest message and the page stays in Mock
   // Real is shown but disabled (aria-disabled, still focusable) and its title says why; the page stays in Mock.
-  await page.waitForFunction(() => document.querySelector('[data-testid="mode-real"]')?.getAttribute('aria-disabled') === 'true', null, { timeout: 15000 });
+  // The shared TopMenu: Real is a disabled <option> whose title carries the refusal; selecting it is refused.
+  await page.waitForFunction(() => document.querySelector('[data-testid="mode-real"]')?.disabled === true, null, { timeout: 15000 });
   const realTitle = (await page.getByTestId('mode-real').getAttribute('title')) || '';
   check(/Live mode is not available/.test(realTitle), `Real is disabled and its title explains why: "${realTitle.slice(0, 80)}"`);
-  check((await page.getByTestId('mode-mock').getAttribute('aria-pressed')) === 'true' && (await page.getByTestId('mode-real').getAttribute('aria-pressed')) === 'false' && /MODE: MOCK/.test(await page.getByTestId('mode-header').innerText()), 'the page stays in Mock');
-  await page.getByTestId('mode-mock').click();
+  // A disabled option cannot be chosen: the select still shows mock and the page stays in Mock.
+  check((await page.getByTestId('mode-select').inputValue()) === 'mock' && /MODE: MOCK/.test(await page.getByTestId('mode-header').innerText()), 'the page stays in Mock');
   check((await page.getByTestId('mode-note').innerText()) === '', 'choosing Mock leaves no note');
   // P and Esc
   await page.keyboard.press('p');
-  check((await page.getByTestId('presenter').getAttribute('aria-pressed')) === 'true' && await page.getByTestId('sim-banner').isVisible() && await page.getByTestId('mode-real').isVisible(), 'P turns presenter mode on; the banner and the Mock | Real toggle stay');
+  check((await page.getByTestId('presenter').getAttribute('aria-pressed')) === 'true' && await page.getByTestId('sim-banner').isVisible() && await page.getByTestId('mode-select').isVisible(), 'P turns presenter mode on; the banner and the Mock | Real toggle stay');
   await page.keyboard.press('Control+p');
   check((await page.getByTestId('presenter').getAttribute('aria-pressed')) === 'true', 'Ctrl+P is ignored');
   await page.keyboard.press('Escape');
