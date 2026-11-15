@@ -1,6 +1,11 @@
 import React from "react";
-import { Inert, pretty } from "./Untrusted.jsx";
+import { Inert } from "./Untrusted.jsx";
+import Json from "./JsonPane.jsx";
 import { STATUS_GLYPH, STATUS_WORD, UNVERIFIED_STEP } from "../lib/phases.js";
+
+// Keys that matter in THIS lab's payloads, on top of the shared defaults (sub, aud, scope, client_id, iss, ...): the catalog record, the
+// connector's state, the PKCE and resource-indicator parameters, and the discovery documents.
+const HOT = ["connector_id", "connector_state", "state", "mcp_server_url", "resource", "resource_metadata", "authorization_server", "authorization_servers", "code_verifier", "code_challenge", "redirect_uri", "code", "scopes_requested", "iss_in_response"];
 
 const label = (participants, id) => participants.find((p) => p.id === id)?.label || id;
 
@@ -10,11 +15,11 @@ function Exchange({ ex, participants, i }) {
     <section className="exchange" aria-label={`Exchange ${i + 1}`}>
       <h3>{label(participants, ex.from)} {"→"} {label(participants, ex.to)}{ex.viaBrowser ? " (front channel, via the browser)" : ""}</h3>
       <p className="mono req"><strong>{ex.request?.method}</strong> <Inert text={ex.request?.url} /></p>
-      {hdrs(ex.request?.headers) && <Inert block text={pretty(ex.request.headers)} />}
-      {ex.request?.body !== undefined && ex.request?.body !== null && <Inert block text={pretty(ex.request.body)} />}
+      {hdrs(ex.request?.headers) && <Json value={ex.request.headers} label="Request headers" hot={HOT} />}
+      {ex.request?.body !== undefined && ex.request?.body !== null && <Json value={ex.request.body} label="Request body" hot={HOT} />}
       <p className="mono res"><strong>{ex.response?.status}</strong> response</p>
-      {hdrs(ex.response?.headers) && <Inert block text={pretty(ex.response.headers)} />}
-      {ex.response?.body !== undefined && ex.response?.body !== null && ex.response.body !== "" && <Inert block text={pretty(ex.response.body)} />}
+      {hdrs(ex.response?.headers) && <Json value={ex.response.headers} label="Response headers" hot={HOT} />}
+      {ex.response?.body !== undefined && ex.response?.body !== null && ex.response.body !== "" && <Json value={ex.response.body} label="Response body" hot={HOT} />}
     </section>
   );
 }
@@ -24,9 +29,9 @@ function Token({ t }) {
     <section className="token" aria-label={t.label}>
       <h3><span className="badge badge--mock">MOCK-ISSUED</span> <Inert text={t.label} /></h3>
       <p className="muted small">Signed with a key that exists only in this server's memory. It protects nothing and opens nothing.</p>
-      <Inert block text={t.jwt} />
-      {t.header && <Inert block text={pretty(t.header)} />}
-      {t.claims && <Inert block text={pretty(t.claims)} />}
+      <Json value={t.jwt} label="Token (compact JWT)" />
+      {t.header && <Json value={t.header} label="Token header" hot={HOT} />}
+      {t.claims && <Json value={t.claims} label="Token claims" hot={HOT} />}
       {t.scopes?.length ? <p className="small">scopes: <code>{t.scopes.join(" ")}</code></p> : null}
     </section>
   );
@@ -69,7 +74,7 @@ export default function WirePanel({ step, def, status, participants, hasRun }) {
           )}
           {step.exchanges?.map((ex, i) => <Exchange key={i} ex={ex} participants={participants} i={i} />)}
           {step.tokens?.map((t, i) => <Token key={i} t={t} />)}
-          {step.data && <section aria-label="Values at this step"><h3>Values</h3><Inert block text={pretty(step.data)} /></section>}
+          {step.data && <section aria-label="Values at this step"><h3>Values</h3><Json value={step.data} label="Values" hot={HOT} /></section>}
         </>
       )}
     </div>
