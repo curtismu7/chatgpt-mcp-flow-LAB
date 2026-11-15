@@ -14,8 +14,8 @@ import { bearerOf } from '../src/actors/private.js';
 import { actorPortOk, assertBindAllowed, credentialGuard, isLoopbackHost, parseHost, portInRange } from '../src/safety.js';
 import { MISTAKES, ORIGINS, PARTICIPANTS, STEPS } from '../src/definition.js';
 import { allPassed, runChecks } from '../src/doctor.js';
-import { createHealth } from '../src/health.js';
 import { createClock } from '../src/clock.js';
+import { testHealth } from './helpers.js';
 
 const key = createKeyPair('k1');
 const jwks = { keys: [key.publicJwk] };
@@ -145,7 +145,7 @@ test('doctor passes, and fails on an out-of-range port or a non-loopback bind', 
 
 test('health: demo-health/1 shape, ready when the doctor passes, broken when it fails, never runs per request', async (t) => {
   let calls = 0;
-  const h = createHealth({ runChecks: () => { calls += 1; return [{ level: 'pass' }]; }, now: () => new Date('2026-10-21T12:00:00Z'), intervalMs: 3_600_000 });
+  const h = testHealth({ runChecks: () => { calls += 1; return [{ level: 'pass' }]; }, now: () => new Date('2026-10-21T12:00:00Z'), intervalMs: 3_600_000 });
   const { default: express } = await import('express');
   const app = express(); app.use('/api/health', h.router);
   const srv = app.listen(0, '127.0.0.1'); // ephemeral loopback only inside this pure test; see helpers for the real port slices
@@ -161,8 +161,8 @@ test('health: demo-health/1 shape, ready when the doctor passes, broken when it 
   assert.equal(body.demo.id, 'chatgpt-mcp-flow');
   assert.equal(body.at, '2026-10-21T12:00:00.000Z');
   assert.equal((await fetch(url, { method: 'POST' })).status, 405);
-  const broken = createHealth({ runChecks: () => [{ level: 'fail' }] }); assert.ok(broken.router); broken.stop();
-  const thrown = createHealth({ runChecks: () => { throw new Error('x'); } }); thrown.stop();
+  const broken = testHealth({ runChecks: () => [{ level: 'fail' }] }); assert.ok(broken.router); broken.stop();
+  const thrown = testHealth({ runChecks: () => { throw new Error('x'); } }); thrown.stop();
 });
 
 test('clock: advancing moves time without sleeping, reset restores it', () => {
@@ -223,7 +223,7 @@ test('no source file reaches for generateKeyPair (it aborts on Node 20 in CI); k
 });
 
 test('health route on its own: GET is no-store demo-health/1, any other method is 405 with Allow: GET', () => {
-  const h = createHealth({ runChecks: () => [{ ok: true }] });
+  const h = testHealth({ runChecks: () => [{ ok: true }] });
   try {
     const call = (method) => new Promise((resolve) => {
       const res = { headers: {}, statusCode: 200, set(k, v) { this.headers[String(k).toLowerCase()] = v; return this; }, status(c) { this.statusCode = c; return this; }, json(b) { resolve({ status: this.statusCode, headers: this.headers, body: b }); return this; } };

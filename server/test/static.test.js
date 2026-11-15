@@ -4,14 +4,13 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { createApp, UI_CSP } from '../src/app.js';
-import { createHealth } from '../src/health.js';
-import { freeBase, request } from './helpers.js';
+import { freeBase, request, testHealth } from './helpers.js';
 
 // Uses the 'static' slice (6699 only): static serving needs no mock actors, so the runtime is a stub.
 async function boot(t, webDist) {
   const port = await freeBase('static', 1);
   const rt = { mode: 'mock', listRuns: () => [], reset() {} };
-  const health = createHealth();
+  const health = testHealth();
   const server = createApp({ runtime: rt, health, webDist }).listen(port, '127.0.0.1');
   await new Promise((r) => server.once('listening', r));
   t.after(async () => { health.stop(); server.closeAllConnections(); await new Promise((r) => server.close(r)); });

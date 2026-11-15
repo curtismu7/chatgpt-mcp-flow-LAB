@@ -12,4 +12,3 @@ export function Inert({ text, block = false }) {
     </Tag>
   );
 }
-export const pretty = (v) => (typeof v === "string" ? v : JSON.stringify(v, null, 2));

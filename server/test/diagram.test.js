@@ -7,12 +7,11 @@ import { createApp } from '../src/app.js';
 import { PARTICIPANTS, STEPS } from '../src/definition.js';
 import { DIAGRAM_NAMES, diagramByName, loadDiagram } from '../src/diagramData.js';
 import { validateDiagram } from '../src/diagramStudioValidate.js';
-import { createHealth } from '../src/health.js';
-import { request } from './helpers.js';
+import { request, testHealth } from './helpers.js';
 
 let health; let server; let port;
 before(async () => {
-  health = createHealth();
+  health = testHealth();
   server = createApp({ runtime: { mode: 'mock', listRuns: () => [], reset() {} }, health }).listen(0, '127.0.0.1');
   await new Promise((r) => server.once('listening', r));
   port = server.address().port;
