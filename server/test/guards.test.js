@@ -3,16 +3,15 @@ import test, { after, before } from 'node:test';
 import assert from 'node:assert/strict';
 import net from 'node:net';
 import { createApp } from '../src/app.js';
-import { createHealth } from '../src/health.js';
 import { createRuntime } from '../src/runtime.js';
 import { hostGuard, makeHostGuard, makeOriginGuard, originGuard, parseAllowedHosts, parseHost } from '../src/safety.js';
-import { GUARDS_CONTROL_PORT, freeBase, request } from './helpers.js';
+import { GUARDS_CONTROL_PORT, freeBase, request, testHealth } from './helpers.js';
 
 let rt; let health; let server; let port;
 before(async () => {
   const base = await freeBase('guards', 5);
   rt = await createRuntime({ stubBase: base });
-  health = createHealth();
+  health = testHealth();
   port = GUARDS_CONTROL_PORT;
   server = createApp({ runtime: rt, health }).listen(port, '127.0.0.1');
   await new Promise((r) => server.once('listening', r));
