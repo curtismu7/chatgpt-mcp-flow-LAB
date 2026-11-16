@@ -1,5 +1,8 @@
 # Changelog
 
+## Unreleased
+- Verification mark in the header: the shared `VerifyMark` (vendored from AI-DEMO-Standalone `shared/verify-mark`, byte for byte, pinned) shows this lab's Verified / In progress mark from the demo shelf, inside the top menu beside the Shelf link. It reads the same `GET /api/shelf` call the Shelf link makes, so it shows through the lab-proxy and nothing when the lab is opened on its own port, when the shelf has no mark for it, or when the shelf is unreachable. Two web tests: the pin test and the header test.
+
 ## LAB-2 (fix pass after review)
 - Neutrality scan: `github.com` is no longer an allowed host. Only this repo's own `ping-sandbox` URL and the gitleaks release download path pass; any other `github.com` URL is a finding (new test).
 - Server health test now closes its listener in `t.after`, so a failing assertion fails fast instead of hanging the run (checked by mutating the health schema: 3 tests fail, exit 1, no hang).
