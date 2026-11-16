@@ -175,32 +175,32 @@ export default function App({ baseMs = BASE_MS }) {
   return (
     <div className={`app${presenter ? " presenter" : ""}`}>
       <a className="skip" href="#main">Skip to content</a>
-      <div className="banner" role="region" aria-label="Simulation notice" data-state="mock" data-testid="sim-banner"><strong>{bannerText}</strong></div>
-      <header className="top">
-        <h1>AI assistant to MCP: how the call is authorized</h1>
-        <div className="top__tools">
-            <TopMenu
-              mode={{ value: "mock", onChange: (v) => (v === "real" ? chooseReal() : chooseMock()), realAvailable: modeInfo ? modeInfo.realAvailable !== false : true, realHint: modeInfo?.realReason }}
-              theme={{ value: theme, onChange: setTheme }}
-              fontSize={{ value: fontStep, onChange: setFontStep }}
-              present={{ active: presenter, onToggle: togglePresenter }}
-              onReset={reset}
-            >
-              <ShelfLink />
-            </TopMenu>
-          <span className="mode-badge" data-testid="mode-badge" title="This is a teaching demo">DEMO</span>
-          <span className="mode-chip" data-testid="mode-header">MODE: {modeName} <span className="muted">in-process stubs on 127.0.0.1{health ? ` · health ${health.state}` : ""}</span></span>
-        </div>
-        <p className="top__note" role="status" aria-live="polite" data-testid="mode-note">{modeNote}</p>
+      <header className="shell-bar">
+        <span className="shell-brand">
+          <span className="shell-logo" aria-hidden="true">MCP</span>
+          <h1>AI assistant to MCP: how the call is authorized</h1>
+          <span className="shell-badge" data-testid="mode-badge" title={`Teaching demo: in-process stubs on 127.0.0.1${health ? `, health ${health.state}` : ""}`}>{modeName}</span>
+        </span>
+        {!presenter && (
+          <nav className="shell-nav" aria-label="Sections">
+            {[["sequence", "Sequence"], ["interlocks", "Interlocks"], ["about", "What is real"]].map(([id, text]) => (
+              <a key={id} href={`#${id}`} aria-current={tab === id ? "page" : undefined} onClick={(e) => { e.preventDefault(); changeTab(id); }}>{text}</a>
+            ))}
+          </nav>
+        )}
+        <TopMenu
+          mode={{ value: "mock", onChange: (v) => (v === "real" ? chooseReal() : chooseMock()), realAvailable: modeInfo ? modeInfo.realAvailable !== false : true, realHint: modeInfo?.realReason }}
+          theme={{ value: theme, onChange: setTheme }}
+          fontSize={{ value: fontStep, onChange: setFontStep }}
+          present={{ active: presenter, onToggle: togglePresenter }}
+          onReset={reset}
+        >
+          <ShelfLink />
+        </TopMenu>
       </header>
-      {!presenter && (
-        <nav className="tabs" aria-label="Sections">
-          {[["sequence", "Sequence"], ["interlocks", "Interlocks"], ["about", "What is real"]].map(([id, text]) => (
-            <button key={id} type="button" aria-pressed={tab === id} onClick={() => changeTab(id)}>{text}</button>
-          ))}
-        </nav>
-      )}
       <main id="main" className="page" tabIndex={-1}>
+        <div className="banner" role="region" aria-label="Simulation notice" data-state="mock" data-testid="sim-banner"><strong>{bannerText}</strong></div>
+        <p className="mode-note" role="status" aria-live="polite" data-testid="mode-note">{modeNote}</p>
         {loadError && <div className="alert" role="alert">The control API did not answer: {loadError}</div>}
         {!(flow && diagram) && !loadError && <p className="muted">Loading the flow definition...</p>}
         {flow && diagram && tab === "sequence" && (
@@ -245,7 +245,7 @@ export default function App({ baseMs = BASE_MS }) {
             <div className="hide-presenter"><WirePanel step={stepData} def={def} status={def ? statusOf(def.n) : "pending"} participants={participants} hasRun={Boolean(run)} /></div>
           </>
         )}
-        {flow && diagram && tab === "interlocks" && !presenter && <Interlocks mistakes={flow.mistakes} participants={participants} results={results} onRun={runOne} onRunAll={runAll} busy={busy} />}
+        {flow && diagram && !presenter && tab === "interlocks" && <Interlocks mistakes={flow.mistakes} participants={participants} results={results} onRun={runOne} onRunAll={runAll} busy={busy} />}
         {flow && diagram && tab === "about" && !presenter && <About flow={flow} />}
       </main>
     </div>

@@ -67,8 +67,7 @@ try {
 
   await page.goto(`${base}/`);
   await page.getByTestId('mode-badge').waitFor();
-  check((await page.getByTestId('mode-badge').innerText()).includes('DEMO'), 'header shows the DEMO badge');
-  check(/MODE: MOCK/.test(await page.getByTestId('mode-header').innerText()), 'mode header says MOCK');
+  check((await page.getByTestId('mode-badge').innerText()).includes('MOCK'), 'the shell bar shows the MOCK badge');
   const csp = (await fetch(`${base}/`)).headers.get('content-security-policy') || '';
   check(/script-src 'self'/.test(csp) && !/unsafe-eval/.test(csp), 'the page is served with a same-origin CSP');
   await page.waitForFunction(() => document.querySelectorAll('.react-flow__edge-text').length === 20 && document.querySelectorAll('.react-flow__node').length === 8, null, { timeout: 30000 });
@@ -85,7 +84,7 @@ try {
 
   // Banner, Mock | Real toggle and Reset in the header on every tab
   for (const name of ['Interlocks', 'What is real', 'Sequence']) {
-    await page.getByRole('button', { name, exact: true }).click();
+    await page.getByRole('link', { name, exact: true }).click();
     check(await page.getByTestId('sim-banner').isVisible(), `banner visible on the ${name} tab`);
     // The shared TopMenu: a mode <select> whose value is the current mode, plus Reset.
     check(await page.getByTestId('mode-select').isVisible() && (await page.getByTestId('mode-select').inputValue()) === 'mock' && await page.getByTestId('reset').isVisible(), `Mock | Real toggle (Mock selected) and Reset in the header on the ${name} tab`);
@@ -99,7 +98,7 @@ try {
   const realTitle = (await page.getByTestId('mode-real').getAttribute('title')) || '';
   check(/Live mode is not available/.test(realTitle), `Real is disabled and its title explains why: "${realTitle.slice(0, 80)}"`);
   // A disabled option cannot be chosen: the select still shows mock and the page stays in Mock.
-  check((await page.getByTestId('mode-select').inputValue()) === 'mock' && /MODE: MOCK/.test(await page.getByTestId('mode-header').innerText()), 'the page stays in Mock');
+  check((await page.getByTestId('mode-select').inputValue()) === 'mock' && /MOCK/.test(await page.getByTestId('mode-badge').innerText()), 'the page stays in Mock');
   check((await page.getByTestId('mode-note').innerText()) === '', 'choosing Mock leaves no note');
   // P and Esc
   await page.keyboard.press('p');
@@ -200,18 +199,18 @@ try {
   await page.getByTestId('mistake-none').check({ force: true });
 
   // Interlocks tab: run all
-  await page.getByRole('button', { name: 'Interlocks', exact: true }).click();
+  await page.getByRole('link', { name: 'Interlocks', exact: true }).click();
   await page.getByRole('button', { name: /^Run all/ }).click();
   await page.waitForFunction((n) => document.querySelectorAll('[data-testid^="result-"] .status--ok').length === n, flow.mistakes.length, { timeout: 90000 });
   check(true, `Interlocks tab: all ${flow.mistakes.length} checks held`);
   await shot('4-interlocks-light');
-  await page.getByRole('button', { name: 'What is real', exact: true }).click();
+  await page.getByRole('link', { name: 'What is real', exact: true }).click();
   check(/UNVERIFIED/.test(await page.locator('main').innerText()), 'What is real tab labels product behaviour UNVERIFIED');
-  await page.getByRole('button', { name: 'Sequence', exact: true }).click();
+  await page.getByRole('link', { name: 'Sequence', exact: true }).click();
 
   // Presenter mode keeps the banner
   await page.getByTestId('presenter').click();
-  check(await page.getByTestId('sim-banner').isVisible() && (await page.getByRole('button', { name: 'Interlocks', exact: true }).count()) === 0, 'presenter mode keeps the banner');
+  check(await page.getByTestId('sim-banner').isVisible() && (await page.getByRole('link', { name: 'Interlocks', exact: true }).count()) === 0, 'presenter mode keeps the banner');
   await simulateAndShowAll();
   await shot('5-presenter-light');
   await page.getByTestId('presenter').click();
@@ -232,12 +231,12 @@ try {
   for (const theme of ['dark', 'light']) {
     if (theme === 'light') await page.getByTestId('theme-select').selectOption('light');
     for (const name of ['Sequence', 'Interlocks', 'What is real']) {
-      await page.getByRole('button', { name, exact: true }).click();
+      await page.getByRole('link', { name, exact: true }).click();
       const w = await page.evaluate(() => ({ s: document.documentElement.scrollWidth, c: document.documentElement.clientWidth }));
       check(w.s <= w.c, `375px ${theme} ${name}: no horizontal scroll (${w.s} <= ${w.c})`);
     }
   }
-  await page.getByRole('button', { name: 'Sequence', exact: true }).click();
+  await page.getByRole('link', { name: 'Sequence', exact: true }).click();
   const scroll = await page.evaluate(() => { const e = document.querySelector('.flow-scroll'); return { s: e.scrollWidth, c: e.clientWidth }; });
   check(scroll.s > scroll.c, `375px: the diagram scrolls inside its own frame instead of shrinking (${scroll.s} > ${scroll.c})`);
   await shot('8-mobile-light');

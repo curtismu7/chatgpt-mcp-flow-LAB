@@ -108,7 +108,7 @@ Other variables: `MCP_FLOW_STUB_BASE` (the first of the five mock-actor ports, d
 
 ## Mock and live modes
 
-The header of every page, including presenter mode, has a **Mock | Live** toggle and a `MODE: MOCK` badge, and the simulation banner names the same mode. Mock is the only mode: the whole flow runs against the in-process mock actors. Live is refused with this message, and the page stays in Mock: "Live mode is not available in this lab: every actor is an in-process mock on 127.0.0.1 and no real provider is configured or contacted, so the page stays in Mock mode." (`POST /api/mode` answers 409 `live_not_supported`.) The browser logs that deliberate 409, and the refusals the mistake runs show, as console messages.
+The header of every page, including presenter mode, has a **Mock | Live** toggle and a `MOCK` badge, and the simulation banner names the same mode. Mock is the only mode: the whole flow runs against the in-process mock actors. Live is refused with this message, and the page stays in Mock: "Live mode is not available in this lab: every actor is an in-process mock on 127.0.0.1 and no real provider is configured or contacted, so the page stays in Mock mode." (`POST /api/mode` answers 409 `live_not_supported`.) The browser logs that deliberate 409, and the refusals the mistake runs show, as console messages.
 
 ## Health, doctor and reset
 
