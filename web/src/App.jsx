@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import TopMenu, { applyFontSize } from "./top-menu/TopMenu.jsx";
 import ShelfLink from "./components/ShelfLink.jsx";
+import VerifyMark from "./components/VerifyMark.jsx";
 import { getDiagram, getFlow, getHealth, getInfo, postMode, postReset, postRun } from "./lib/api.js";
 import { STATUS_WORD } from "./lib/phases.js";
 import Diagram, { useDiagramPositions } from "./components/Diagram.jsx";
@@ -196,6 +197,7 @@ export default function App({ baseMs = BASE_MS }) {
           onReset={reset}
         >
           <ShelfLink />
+          <VerifyMark id="chatgpt-mcp-flow" />
         </TopMenu>
       </header>
       <main id="main" className="page" tabIndex={-1}>
