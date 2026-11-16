@@ -17,8 +17,8 @@
 [data-phase="redemption"] { --phase: var(--phase-redemption); }
 [data-phase="obo"] { --phase: var(--phase-obo); }
 
-.app { max-width: 1600px; margin: 0 auto; padding-bottom: 48px; }
-.page { padding: 0; }
+/* No width cap on .app: the body already has the 16px gutter, so the shell bar (-16px) runs edge to edge and .page centres the content. */
+.app { padding-bottom: 48px; }
 .muted { color: var(--muted); }
 .small { font-size: 13px; }
 code, .mono { font-size: 13px; overflow-wrap: anywhere; }
@@ -29,17 +29,24 @@ h2 { margin: 8px 0; font-size: 20px; }
 h3 { margin: 0 0 6px; font-size: 16px; }
 h4 { margin: 10px 0 4px; font-size: 14px; }
 
-/* Header: title, mode, actions. The mode toggle is on every page. */
 html { font-size: var(--fs, 16px); }
-.top { position: relative; display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; padding: 12px 0; border-bottom: 1px solid var(--border); }
-.top h1 { flex: 1 1 280px; margin: 0; font-size: 20px; }
-.top__tools { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
-.top__note { flex: 1 1 100%; margin: 0; padding: 6px 10px; border: 1px solid var(--border); border-left: 4px solid var(--status-info); border-radius: 8px; background: var(--surface-2); color: var(--text); font-size: 13px; }
-.top__note:empty { display: none; }
-.mode-toggle { display: inline-flex; gap: 4px; }
-.mode-badge, .mode-chip { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border: 1px solid var(--border); border-radius: 999px; background: var(--surface); color: var(--text); font-size: 12px; font-weight: 700; }
-.mode-chip .muted { font-weight: 400; }
-.tabs { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0; }
+/* Shell bar (STANDALONE-UI-PATTERNS.md section 1): Core Dark in both themes, Ping Red gradient rule, full-bleed (the -16px
+   cancels the body gutter); wraps at 600px. position: relative anchors the TopMenu sign-in slot. */
+.shell-bar { position: relative; display: flex; flex-wrap: wrap; align-items: center; gap: 8px 20px; margin: 0 -16px; padding: 10px 20px;
+  background: var(--box-dark); color: var(--on-box); border-bottom: 3px solid transparent; border-image: var(--accent-gradient) 1; }
+.shell-bar h1 { margin: 0; color: var(--on-box); font-size: 18px; }
+.shell-brand { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 10px; font-weight: 700; letter-spacing: 0.02em; }
+.shell-logo { display: inline-grid; place-items: center; min-width: 30px; height: 30px; padding: 0 4px; border-radius: 6px; background: var(--accent-gradient); color: var(--on-accent); font: 800 12px var(--font-mono); }
+.shell-badge { padding: 2px 8px; border-radius: 999px; border: 1px solid transparent; background: var(--accent-gradient); color: var(--on-accent); font: 700 12px var(--font-mono); letter-spacing: 0.06em; text-transform: uppercase; }
+.shell-nav { display: flex; gap: 4px; flex: 1 1 auto; } /* one row of pills; when the bar is full the TopMenu wraps below, not the nav */
+.shell-nav a { padding: 5px 12px; border-radius: 999px; border: 1px solid transparent; color: var(--on-box); text-decoration: none; font-size: 14px; font-weight: 500; white-space: nowrap; }
+.shell-nav a:hover { border-color: var(--on-box); }
+.shell-nav a[aria-current="page"] { background: var(--accent-gradient); color: var(--on-accent); font-weight: 600; }
+.shell-bar .shell-right { margin-left: auto; } /* TopMenu renders .top-menu.shell-right; its own layout stays */
+/* Page frame (section 3): one centred 1100px column; the simulation banner is its first child. */
+.page { max-width: 1100px; margin: 0 auto; padding: 0; }
+.mode-note { margin: 8px 0 0; padding: 6px 10px; border: 1px solid var(--border); border-left: 4px solid var(--status-info); border-radius: 8px; background: var(--surface-2); color: var(--text); font-size: 13px; }
+.mode-note:empty { display: none; }
 
 .card { padding: 12px 16px; margin: 12px 0; border: 1px solid var(--border); border-radius: 10px; background: var(--surface); min-width: 0; }
 .alert { padding: 8px 12px; margin: 8px 0; border: 1px solid var(--danger-text); border-radius: 8px; background: var(--accent-soft); color: var(--danger-text); }
@@ -137,6 +144,7 @@ button.primary[aria-disabled="true"] { opacity: 0.88; }
 /* Reel */
 .reel { display: flex; gap: 6px; list-style: none; margin: 12px 0 4px; padding: 10px 2px 10px; overflow-x: auto; scroll-snap-type: x proximity; border-top: 4px dotted var(--border); border-bottom: 4px dotted var(--border); }
 .reel li { flex: 0 0 132px; scroll-snap-align: start; }
+/* ui-pattern: allow P10 the reel frame top edge reads --phase, an alias set per [data-phase] that resolves only to shared tokens (status, accent, muted) */
 .frame { display: grid; grid-template-columns: auto 1fr auto; gap: 2px 6px; align-items: start; width: 100%; min-height: 74px; padding: 6px 8px; border-top: 6px solid var(--phase, var(--border)); border-radius: 6px; font-size: 12px; font-weight: 400; line-height: 1.2; text-align: left; }
 .frame__n { font: 700 14px var(--font-mono); }
 .frame__s { font-weight: 700; }
@@ -184,6 +192,7 @@ button.primary[aria-disabled="true"] { opacity: 0.88; }
 .presenter .caption { font-size: 18px; }
 
 @media (max-width: 600px) {
-  .mode-chip .muted { display: none; }
+  .shell-bar { gap: 10px; padding: 10px 16px; }
+  .shell-nav { order: 3; flex-basis: 100%; }
   .flow-wrap { height: 60vh; min-width: 760px; } /* the box row scrolls inside .flow-scroll instead of shrinking to a thumbnail */
 }

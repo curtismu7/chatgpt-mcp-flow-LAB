@@ -28,15 +28,26 @@ beforeEach(() => {
 afterEach(() => { cleanup(); vi.useRealTimers(); vi.clearAllMocks(); });
 
 describe("chrome", () => {
-  it("shows the DEMO badge, the mode header and the simulation banner on every tab", async () => {
+  it("shows the MOCK badge in the shell bar and the simulation banner on every tab", async () => {
     await mount();
-    expect(screen.getByTestId("mode-badge")).toHaveTextContent("DEMO");
-    expect(screen.getByTestId("mode-header")).toHaveTextContent("MODE: MOCK");
+    expect(screen.getByTestId("mode-badge")).toHaveTextContent("MOCK");
     for (const name of ["Sequence", "Interlocks", "What is real"]) {
-      fireEvent.click(screen.getByRole("button", { name }));
+      fireEvent.click(screen.getByRole("link", { name }));
+      expect(screen.getByRole("link", { name })).toHaveAttribute("aria-current", "page");
       expect(screen.getByTestId("sim-banner")).toHaveTextContent(/SIMULATION/);
       expect(screen.getByTestId("sim-banner")).toHaveTextContent(/MOCK-ISSUED/);
     }
+  });
+  it("puts the shell bar first, then main with the simulation banner as its first child", async () => {
+    const { container } = render(<App baseMs={1000} />);
+    await screen.findByTestId("simulate");
+    const bar = container.querySelector("header.shell-bar");
+    const main = container.querySelector("main");
+    expect(bar).not.toBeNull();
+    expect(bar.compareDocumentPosition(main) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(main.firstElementChild).toBe(screen.getByTestId("sim-banner"));
+    expect(bar.querySelector("h1")).toHaveTextContent("AI assistant to MCP");
+    expect(bar.querySelector("[data-testid='top-menu']")).not.toBeNull();
   });
   it("puts the simulation notice in a landmark, and the headings never skip a level", async () => {
     await mount();
@@ -78,12 +89,12 @@ describe("chrome", () => {
     await mount();
     fireEvent.click(screen.getByTestId("presenter"));
     expect(screen.getByTestId("sim-banner")).toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: "Interlocks" })).toBeNull();
+    expect(screen.queryByRole("link", { name: "Interlocks" })).toBeNull();
     expect(screen.getByTestId("presenter")).toHaveAttribute("aria-pressed", "true");
   });
   it("labels product behaviour UNVERIFIED and cites standards on the About tab", async () => {
     await mount();
-    fireEvent.click(screen.getByRole("button", { name: "What is real" }));
+    fireEvent.click(screen.getByRole("link", { name: "What is real" }));
     expect(screen.getAllByText(/UNVERIFIED/).length).toBeGreaterThan(0);
     expect(screen.getAllByText(/RFC 8693/)[0]).toBeInTheDocument();
   });
@@ -188,7 +199,7 @@ describe("simulation", () => {
   it("Interlocks tab: Run all fills the table from real runs and flags a difference", async () => {
     api.postRun.mockImplementation(async (id) => refusedRun(id));
     await mount();
-    fireEvent.click(screen.getByRole("button", { name: "Interlocks" }));
+    fireEvent.click(screen.getByRole("link", { name: "Interlocks" }));
     fireEvent.click(screen.getByRole("button", { name: /Run all/ }));
     await waitFor(() => expect(screen.getByTestId("result-passthrough")).toHaveTextContent(/held/));
     expect(api.postRun).toHaveBeenCalledTimes(FLOW.mistakes.length);
@@ -206,11 +217,11 @@ describe("Mock | Real toggle, presenter keys, Reset and aria-disabled", () => {
       expect(sel.closest("[hidden],[aria-hidden='true']")).toBeNull();
       expect(sel).toHaveValue("mock");
       expect(screen.getByRole("option", { name: "Real" })).toHaveAttribute("disabled"); // the server's honest answer: this lab has no Real
-      expect(screen.getByTestId("mode-header")).toHaveTextContent("MODE: MOCK");
+      expect(screen.getByTestId("mode-badge")).toHaveTextContent("MOCK");
       expect(screen.getByTestId("sim-banner")).toHaveTextContent(/MOCK mode/);
       expect(screen.getByTestId("reset")).toBeInTheDocument();
     };
-    for (const name of ["Sequence", "Interlocks", "What is real"]) { fireEvent.click(screen.getByRole("button", { name })); check(); }
+    for (const name of ["Sequence", "Interlocks", "What is real"]) { fireEvent.click(screen.getByRole("link", { name })); check(); }
     fireEvent.click(screen.getByTestId("presenter"));
     check();
   });
@@ -226,7 +237,7 @@ describe("Mock | Real toggle, presenter keys, Reset and aria-disabled", () => {
     expect(screen.getByTestId("mode-note")).toHaveTextContent(/stays in Mock mode/);
     expect(screen.getByTestId("mode-select")).toHaveValue("mock");
     expect(screen.getByRole("option", { name: "Real" })).toHaveAttribute("disabled");
-    expect(screen.getByTestId("mode-header")).toHaveTextContent("MODE: MOCK");
+    expect(screen.getByTestId("mode-badge")).toHaveTextContent("MOCK");
     fireEvent.change(screen.getByTestId("mode-select"), { target: { value: "mock" } });
     expect(screen.getByTestId("mode-note")).toBeEmptyDOMElement();
   });
@@ -237,7 +248,7 @@ describe("Mock | Real toggle, presenter keys, Reset and aria-disabled", () => {
     press("p");
     expect(screen.getByTestId("presenter")).toHaveAttribute("aria-pressed", "true");
     expect(screen.getByTestId("sim-banner")).toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: "Interlocks" })).toBeNull();
+    expect(screen.queryByRole("link", { name: "Interlocks" })).toBeNull();
     press("Escape");
     expect(screen.getByTestId("presenter")).toHaveAttribute("aria-pressed", "false");
     press("P");
