@@ -147,6 +147,8 @@ try {
   const wire = await page.getByTestId('wire').innerText();
   check(/code_verifier/.test(wire) && /UNVERIFIED/.test(wire), 'wire form shows the real redemption request and the UNVERIFIED label');
   await page.getByTestId('frame-15').click();
+  // JsonPane opens in Form view (keys unquoted); the choice is shared, so one click on JSON also covers frame-17 below.
+  await page.getByTestId('wire').getByRole('button', { name: 'JSON', exact: true }).first().click();
   const w11 = await page.getByTestId('wire').innerText();
   check(/MOCK-ISSUED/.test(w11) && /"aud"/.test(w11), 'access-token step shows a MOCK-ISSUED token with its claims');
   await page.getByTestId('frame-17').click();

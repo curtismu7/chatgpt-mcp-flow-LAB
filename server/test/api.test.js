@@ -3,16 +3,15 @@ import test, { after, before } from 'node:test';
 import assert from 'node:assert/strict';
 import { createApp, outerErrorHandler } from '../src/app.js';
 import { MISTAKES, PROVENANCE } from '../src/definition.js';
-import { createHealth } from '../src/health.js';
 import { createRuntime } from '../src/runtime.js';
-import { freeBase, request } from './helpers.js';
+import { freeBase, request, testHealth } from './helpers.js';
 
 let rt; let health; let server; let port;
 const close = (s) => new Promise((r) => { s.closeAllConnections?.(); s.close(r); });
 before(async () => {
   const base = await freeBase('api', 6);
   rt = await createRuntime({ stubBase: base });
-  health = createHealth();
+  health = testHealth();
   port = base + 5;
   server = createApp({ runtime: rt, health }).listen(port, '127.0.0.1');
   await new Promise((r) => server.once('listening', r));
@@ -114,7 +113,7 @@ test('responses are JSON with a locked-down header set, unknown routes are JSON 
 
 test('a 500 never leaks the error message or stack; a full queue is a 429 with Retry-After', async (t) => {
   const boom = { mode: 'mock', run: async () => { throw new Error('secret internals /Users/someone/path'); }, listRuns: () => [], getRun: () => null, reset() {} };
-  const h = createHealth();
+  const h = testHealth();
   const app = createApp({ runtime: boom, health: h });
   const srv = app.listen(0, '127.0.0.1'); // ephemeral loopback, fake runtime: no actors involved
   await new Promise((r) => srv.once('listening', r));
