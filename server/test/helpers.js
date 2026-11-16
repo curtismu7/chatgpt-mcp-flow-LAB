@@ -1,6 +1,8 @@
 // Test helpers. Every test file owns a distinct slice of 6671-6699 so files running in parallel never collide.
 import http from 'node:http';
 import net from 'node:net';
+import { allPassed } from '../src/doctor.js';
+import { createHealth } from '../src/health.js';
 
 // The wire's fetch refuses 6697, 6679 and 6665-6669, so no slice puts an actor there. guards uses 6698 for its control server.
 export const BASES = { flow: 6680, actors: 6685, api: 6690, guards: 6671, static: 6699 };
@@ -43,3 +45,6 @@ export function request(port, method, path, { headers = {}, body, host } = {}) {
     req.end();
   });
 }
+
+// The shared createHealth refuses to start without its identity and checks; tests get the lab's real identity and a no-op check list.
+export const testHealth = (o = {}) => createHealth({ demoId: 'chatgpt-mcp-flow', demoName: 'AI assistant to MCP: authorization flow', version: '0.1.0', runChecks: () => [], allPassed, ...o });

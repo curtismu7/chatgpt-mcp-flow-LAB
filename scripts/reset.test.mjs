@@ -1,13 +1,13 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { createApp } from '../server/src/app.js';
-import { createHealth } from '../server/src/health.js';
 import { createRuntime } from '../server/src/runtime.js';
+import { testHealth } from '../server/test/helpers.js';
 import { reset } from './reset.mjs';
 
 test('the reset script clears the runs through the API and refuses a non-loopback host', async () => {
   const rt = await createRuntime({ stubBase: 6686 });
-  const health = createHealth();
+  const health = testHealth();
   const server = createApp({ runtime: rt, health }).listen(0, '127.0.0.1');
   await new Promise((r) => server.once('listening', r));
   try {

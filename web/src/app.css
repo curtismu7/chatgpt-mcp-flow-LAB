@@ -160,7 +160,7 @@ button.primary[aria-disabled="true"] { opacity: 0.88; }
 .wire-head h2 { margin: 0; flex: 1 1 220px; font-size: 18px; }
 .exchange, .token { margin-top: 12px; padding-top: 4px; border-top: 1px solid var(--border); min-width: 0; }
 .inert { font-family: var(--font-mono); font-size: 13px; white-space: pre-wrap; overflow-wrap: anywhere; }
-.inert--block { display: block; margin: 4px 0; padding: 8px; border: 1px dashed var(--border); border-radius: 6px; background: var(--surface-2); color: var(--text); max-height: 288px; overflow: auto; }
+.inert--block { display: block; margin: 4px 0; padding: 8px; border: 1px dashed var(--border); border-radius: 6px; background: var(--surface-2); color: var(--text); }
 .chip { display: inline-block; padding: 0 4px; border: 1px solid var(--danger-text); border-radius: 4px; background: var(--accent-soft); color: var(--danger-text); font: 0.85em var(--font-mono); }
 .req, .res { margin: 4px 0 0; overflow-wrap: anywhere; }
 .checks { margin: 8px 0; }
