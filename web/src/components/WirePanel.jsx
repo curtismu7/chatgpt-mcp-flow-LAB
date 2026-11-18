@@ -29,7 +29,7 @@ function Token({ t }) {
     <section className="token" aria-label={t.label}>
       <h3><span className="badge badge--mock">MOCK-ISSUED</span> <Inert text={t.label} /></h3>
       <p className="muted small">Signed with a key that exists only in this server's memory. It protects nothing and opens nothing.</p>
-      <Json value={t.jwt} label="Token (compact JWT)" />
+      <Json value={t.jwt} label="Token (compact JWT)" decode={false} />
       {t.header && <Json value={t.header} label="Token header" hot={HOT} />}
       {t.claims && <Json value={t.claims} label="Token claims" hot={HOT} />}
       {t.scopes?.length ? <p className="small">scopes: <code>{t.scopes.join(" ")}</code></p> : null}
