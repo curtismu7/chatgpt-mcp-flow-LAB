@@ -1,8 +1,9 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import TopMenu, { applyFontSize } from "./top-menu/TopMenu.jsx";
+import TalkTrackDialog from "./talk-track/TalkTrackDialog.jsx";
 import ShelfLink from "./components/ShelfLink.jsx";
 import VerifyMark from "./components/VerifyMark.jsx";
-import { getDiagram, getFlow, getHealth, getInfo, postMode, postReset, postRun } from "./lib/api.js";
+import { getDiagram, getFlow, getHealth, getInfo, postMode, postReset, postRun, getTalkTrack } from "./lib/api.js";
 import { STATUS_WORD } from "./lib/phases.js";
 import Diagram, { useDiagramPositions } from "./components/Diagram.jsx";
 import { DetailsRow, Reel } from "./components/Reel.jsx";
@@ -34,6 +35,9 @@ export default function App({ baseMs = BASE_MS }) {
   const [fontStep, setFontStep] = useState(initialFont);
   const [tab, setTab] = useState("sequence");
   const [presenter, setPresenter] = useState(false);
+  const [talkOpen, setTalkOpen] = useState(false);
+  const [talk, setTalk] = useState([]);
+  useEffect(() => { getTalkTrack().then((t) => setTalk(t.talkTrack ?? [])).catch(() => {}); }, []);
   const [flow, setFlow] = useState(null);
   const [health, setHealth] = useState(null);
   const [loadError, setLoadError] = useState("");
@@ -194,6 +198,7 @@ export default function App({ baseMs = BASE_MS }) {
           theme={{ value: theme, onChange: setTheme }}
           fontSize={{ value: fontStep, onChange: setFontStep }}
           present={{ active: presenter, onToggle: togglePresenter }}
+          talkTrack={{ active: talkOpen, onToggle: () => setTalkOpen((v) => !v) }}
           onReset={reset}
         >
           <ShelfLink />
@@ -250,6 +255,8 @@ export default function App({ baseMs = BASE_MS }) {
         {flow && diagram && !presenter && tab === "interlocks" && <Interlocks mistakes={flow.mistakes} participants={participants} results={results} onRun={runOne} onRunAll={runAll} busy={busy} />}
         {flow && diagram && tab === "about" && !presenter && <About flow={flow} />}
       </main>
+      <TalkTrackDialog isOpen={talkOpen} onClose={() => setTalkOpen(false)} talk={talk} />
+
     </div>
   );
 }

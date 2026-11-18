@@ -4,6 +4,7 @@ import { cleanup, render, screen, within } from "@testing-library/react";
 import { DIAGRAM, FLOW } from "./fixtures.js";
 
 vi.mock("../lib/api.js", () => ({
+  getTalkTrack: vi.fn(async () => ({ talkTrack: [] })),
   getFlow: vi.fn(), getHealth: vi.fn(), getDiagram: vi.fn(), getInfo: vi.fn(), postMode: vi.fn(), postRun: vi.fn(), postReset: vi.fn(),
 }));
 import * as api from "../lib/api.js";

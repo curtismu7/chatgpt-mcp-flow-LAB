@@ -4,6 +4,7 @@ import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-libra
 import { DIAGRAM, FLOW, HAPPY, refusedRun } from "./fixtures.js";
 
 vi.mock("../lib/api.js", () => ({
+  getTalkTrack: vi.fn(async () => ({ talkTrack: [] })),
   getFlow: vi.fn(), getHealth: vi.fn(), getDiagram: vi.fn(), getInfo: vi.fn(), postMode: vi.fn(), postRun: vi.fn(), postReset: vi.fn(),
 }));
 import * as api from "../lib/api.js";
