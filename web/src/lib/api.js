@@ -20,4 +20,4 @@ export const getDiagram = (name = "authorization-flow") => call("GET", `/api/dia
 // Real is refused by the server (409 real_not_available) with the honest message, which call() throws as the Error message.
 export const postMode = (source) => call("POST", "/api/mode", { source });
 
-export const getTalkTrack = () => need(call("GET", "/api/talk-track"));
+export const getTalkTrack = () => call("GET", "/api/talk-track");
