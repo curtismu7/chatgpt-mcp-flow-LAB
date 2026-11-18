@@ -9,6 +9,7 @@ import { createHealth } from './health.js';
 import { allPassed, runChecks as defaultChecks } from './doctor.js';
 import { createRuntime } from './runtime.js';
 import { MISTAKES, MISTAKE_IDS, PARTICIPANTS, PHASES, PROVENANCE, STANDARDS, STEPS } from './definition.js';
+import { TALK_TRACK } from './talkTrack.js';
 import { assertBindAllowed, bindHost, credentialGuard, makeHostGuard, makeOriginGuard, parseAllowedHosts, serverPort, stubBase } from './safety.js';
 import { DEFAULT_DIAGRAM, DIAGRAM_NAMES, diagramByName } from './diagramData.js';
 import { shelfInfo } from './shelfLink.js';
@@ -112,6 +113,7 @@ export function createApp({ runtime, health = createHealth({ demoId: 'chatgpt-mc
     console.error('[chatgpt-mcp-flow] api error:', err.message);
     return res.status(500).json({ error: 'server_error' }); // never leaks the message or stack
   });
+  app.get('/api/talk-track', (_req, res) => res.json({ talkTrack: [{ id: 'goal', title: 'Goal', say: TALK_TRACK.goal }, ...TALK_TRACK.beats.map((b) => ({ id: b.id, title: b.title, say: b.say }))] }));
   app.get('/api/shelf', (_req, res) => { res.set('Cache-Control', 'no-store'); res.json(shelfInfo()); }); // the header "Shelf" button
   app.use('/api', api);
   app.use((_req, res) => bad(res, 'no such endpoint', 404));

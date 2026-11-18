@@ -19,3 +19,5 @@ export const postReset = () => call("POST", "/api/reset", {});
 export const getDiagram = (name = "authorization-flow") => call("GET", `/api/diagram?name=${encodeURIComponent(name)}`);
 // Real is refused by the server (409 real_not_available) with the honest message, which call() throws as the Error message.
 export const postMode = (source) => call("POST", "/api/mode", { source });
+
+export const getTalkTrack = () => need(call("GET", "/api/talk-track"));
