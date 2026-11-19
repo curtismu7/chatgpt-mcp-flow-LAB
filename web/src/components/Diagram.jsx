@@ -135,6 +135,7 @@ export default function Diagram({ diagram, steps = [], positions, selectedId = n
   const onNodesChange = useCallback((changes) => onApply(nodes, changes), [nodes, onApply]);
   return (
     <div className="flow-scroll" role="region" aria-label="Sequence diagram scroll area" tabIndex={0}>
+      <h2><span className="step-num" aria-hidden="true">3</span>The sequence, message by message</h2>
       <ArrowDefs phases={phases} />
       <div className={`flow-wrap${presenter ? " flow-wrap--big" : ""}`} data-testid="diagram" role="group" aria-label="Sequence diagram. The reel and the step buttons below give the same content as text.">
         <ReactFlow

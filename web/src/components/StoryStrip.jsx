@@ -5,6 +5,7 @@ export default function StoryStrip({ phases, activePhase, vertical = "default" }
   const [pack, setPack] = useState(Object.hasOwn(PACKS, vertical) ? vertical : "default");
   return (
     <section className="story" aria-label="The story in six phases">
+      <h2><span className="step-num" aria-hidden="true">1</span>The story in six phases</h2>
       <label className="field">Story vocabulary
         <select value={pack} onChange={(e) => setPack(e.target.value)} data-testid="story-pack">
           {Object.keys(PACKS).map((id) => <option key={id} value={id}>{PACK_LABELS[id]}</option>)}
