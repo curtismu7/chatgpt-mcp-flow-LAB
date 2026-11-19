@@ -214,6 +214,7 @@ export default function App({ baseMs = BASE_MS }) {
           <>
             {!presenter && <StoryStrip phases={flow.phases} activePhase={def?.phase} vertical={flow.config?.vertical} />}
             <section className="card controls" aria-label="Simulation controls">
+              <h2><span className="step-num" aria-hidden="true">2</span>Simulate the call</h2>
               <MistakeStrip mistakes={flow.mistakes} value={mistake} onChange={chooseMistake} disabled={busy} />
               <div className="row controls-row">
                 <button type="button" className="primary" {...off(busy, simulate)} data-testid="simulate">Simulate</button>
@@ -244,10 +245,13 @@ export default function App({ baseMs = BASE_MS }) {
               )}
             </section>
             <Diagram diagram={diagram} steps={steps} positions={positions} selectedId={selectedId} onApply={apply} statusOf={statusOf} currentN={currentN} theme={theme} presenter={presenter} />
+            <h2 className="reel-heading"><span className="step-num" aria-hidden="true">4</span>Message reel</h2>
             <Reel steps={steps} statusOf={statusOf} selectedN={selectedN} currentN={currentN} onPick={setPicked} phaseLabel={phaseLabel} />
-            <ul className="legend plain" aria-label="Phase colours">
-              {flow.phases.map((p) => <li key={p.id}><span className="dot" data-phase={p.id} aria-hidden="true" /> {p.label}</li>)}
-            </ul>
+            <div className="details" data-testid="phase-legend" aria-label="Phase colours" role="group">
+              <span className="legend-lead">Phase colours:</span>
+              {flow.phases.map((p) => <span key={p.id} className="legend-item"><span className="dot" data-phase={p.id} aria-hidden="true" /> {p.label}</span>)}
+            </div>
+            <h2 className="reel-heading"><span className="step-num" aria-hidden="true">5</span>Who is involved</h2>
             <DetailsRow def={def} participants={participants} phaseLabel={phaseLabel} />
             <div className="hide-presenter"><WirePanel step={stepData} def={def} status={def ? statusOf(def.n) : "pending"} participants={participants} hasRun={Boolean(run)} /></div>
           </>

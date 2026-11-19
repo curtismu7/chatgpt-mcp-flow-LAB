@@ -43,8 +43,8 @@ html { font-size: var(--fs, 16px); }
 .shell-nav a:hover { border-color: var(--on-box); }
 .shell-nav a[aria-current="page"] { background: var(--accent-gradient); color: var(--on-accent); font-weight: 600; }
 .shell-bar .shell-right { margin-left: auto; } /* TopMenu renders .top-menu.shell-right; its own layout stays */
-/* Page frame (section 3): one centred 1100px column; the simulation banner is its first child. */
-.page { max-width: 2200px; margin: 0 auto; padding: 0; }
+/* Page frame (section 3): one centred full-width column; the simulation banner is its first child. */
+.page { max-width: 1600px; margin: 0 auto; padding: 0 16px; }
 .mode-note { margin: 8px 0 0; padding: 6px 10px; border: 1px solid var(--border); border-left: 4px solid var(--status-info); border-radius: 8px; background: var(--surface-2); color: var(--text); font-size: 13px; }
 .mode-note:empty { display: none; }
 
@@ -64,12 +64,25 @@ html { font-size: var(--fs, 16px); }
 .status--pending, .status--blocked { color: var(--muted); }
 .status--skipped { color: var(--status-warn); }
 
-/* Story strip: one cell per phase, topped by the phase colour. */
+/* Story strip: one numbered section per phase, read top to bottom (relayout pattern, not an auto-fit mosaic). */
 .story { margin: 8px 0; }
-.story ol { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 196px), 1fr)); gap: 8px; list-style: none; padding: 0; margin: 8px 0; }
-.story li { display: flex; flex-direction: column; gap: 2px; padding: 8px 12px; border: 1px solid var(--border); border-top: 5px solid var(--phase, var(--border)); border-radius: 8px; background: var(--surface); font-size: 13px; }
+.story h2 { margin: 12px 0 4px; }
+.story ol { display: flex; flex-direction: column; gap: 8px; list-style: none; padding: 0; margin: 8px 0; }
+.story li { display: flex; flex-direction: column; gap: 2px; padding: 8px 12px; border: 1px solid var(--border); border-left: 5px solid var(--phase, var(--border)); border-radius: 8px; background: var(--surface); font-size: 13px; }
 .story li span { color: var(--muted); }
 .story li[data-now="true"] { box-shadow: 0 0 0 2px var(--focus); }
+
+/* Numbered relayout: step badges, full-width stacked sections, paired panels in .duo. */
+.step-num { display: inline-grid; place-items: center; min-width: 22px; height: 22px; border-radius: 50%;
+  background: var(--accent-gradient); color: var(--on-accent); font: 700 0.85em var(--font-mono);
+  margin-right: 8px; vertical-align: 2px; }
+.reel-heading { margin: 16px 0 4px; }
+.legend-item { display: inline-flex; align-items: center; gap: 6px; margin-right: 16px; font-size: 13px; }
+.legend-lead { font-size: 13px; color: var(--muted); font-weight: 700; margin-right: 4px; }
+.duo { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.duo > * { min-width: 0; }
+.hops-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 16px; margin-top: 12px; }
+@media (max-width: 900px) { .duo, .hops-grid { grid-template-columns: 1fr; } }
 
 /* Simulation controls */
 .controls { margin-top: 8px; }
