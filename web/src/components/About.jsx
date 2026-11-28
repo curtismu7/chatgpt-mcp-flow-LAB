@@ -15,7 +15,7 @@ export default function About({ flow }) {
         <ul>{prov.unverified.map((u) => <li key={u}>{u}</li>)}</ul>
       </div>
       <div className="card"><h3>Mock and Live</h3><p>The Mock | Live toggle is in the header of every page. Mock is the only mode this lab has, and it works offline. Live is refused with a message, because no real provider is configured or contacted here: the page stays in Mock.</p></div>
-      <div className="card"><h3>Keyboard</h3><p>Tab reaches every control. Simulate, Step, Pause, Reset and the mistake chips are buttons or radios; the reel frames are buttons. Boxes in the diagram can be dragged, or focused with Tab, selected with Enter and moved with the arrow keys. Reset puts them back. P turns presenter mode on and off, and Esc leaves it; the simulation banner stays.</p></div>
+      <div className="card"><h3>Keyboard</h3><p>Tab reaches every control. Simulate, Step, Pause, Reset and the mistake chips are buttons or radios; the reel frames are buttons. Boxes in the diagram can be dragged, or focused with Tab, selected with Enter and moved with the arrow keys. Reset puts them back. P turns presenter mode on and off, and Esc leaves it.</p></div>
     </section>
   );
 }

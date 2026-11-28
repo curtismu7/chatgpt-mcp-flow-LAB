@@ -67,12 +67,20 @@ try {
 
   await page.goto(`${base}/`);
   await page.getByTestId('mode-badge').waitFor();
+  // The page opens on the MOCK modal; it must be closed before anything is clicked, and it stays away after a same-session reload.
+  await page.getByTestId('mode-modal').waitFor();
+  check((await page.getByTestId('mode-modal').getAttribute('data-mode')) === 'mock' && /MOCK-ISSUED/.test(await page.getByTestId('mode-modal').innerText()), 'the page opens on the MOCK modal with the simulation line');
+  await page.getByTestId('mode-modal-ok').click();
+  check((await page.getByTestId('mode-modal').count()) === 0, 'Got it closes the modal');
+  await page.reload();
+  await page.getByTestId('mode-badge').waitFor();
+  check((await page.getByTestId('mode-modal').count()) === 0 && (await page.getByTestId('sim-banner').count()) === 0, 'after a same-session reload there is no modal and no banner');
   check((await page.getByTestId('mode-badge').innerText()).includes('MOCK'), 'the shell bar shows the MOCK badge');
   const csp = (await fetch(`${base}/`)).headers.get('content-security-policy') || '';
   check(/script-src 'self'/.test(csp) && !/unsafe-eval/.test(csp), 'the page is served with a same-origin CSP');
   await page.waitForFunction(() => document.querySelectorAll('.react-flow__edge-text').length === 20 && document.querySelectorAll('.react-flow__node').length === 8, null, { timeout: 30000 });
   check((await page.locator('.react-flow__node').count()) === 8 && (await page.locator('.react-flow__edge').count()) === 20, 'diagram shows 8 lifelines and 20 numbered messages');
-  check((await page.getByTestId('sim-banner').innerText()).includes('SIMULATION'), 'simulation banner on the Sequence tab');
+  check((await page.getByTestId('sim-banner').count()) === 0, 'no simulation banner on the Sequence tab');
   await settle(page);
   // Every message label fits inside its arrow: the label must never cover the line and its arrowhead.
   const covered = await page.evaluate(() => [...document.querySelectorAll('.react-flow__edge')].map((e) => {
@@ -82,13 +90,13 @@ try {
   check(covered.length === 0, `no message label covers its arrow${covered.length ? `: ${covered.join(', ')}` : ''}`);
   await shot('1-ready-light');
 
-  // Banner, Mock | Real toggle and Reset in the header on every tab
+  // Mock | Real toggle and Reset in the header on every tab; no banner on any of them
   for (const name of ['Interlocks', 'What is real', 'Sequence']) {
     await page.getByRole('link', { name, exact: true }).click();
-    check(await page.getByTestId('sim-banner').isVisible(), `banner visible on the ${name} tab`);
+    check((await page.getByTestId('sim-banner').count()) === 0, `no banner on the ${name} tab`);
     // The shared TopMenu: a mode <select> whose value is the current mode, plus Reset.
     check(await page.getByTestId('mode-select').isVisible() && (await page.getByTestId('mode-select').inputValue()) === 'mock' && await page.getByTestId('reset').isVisible(), `Mock | Real toggle (Mock selected) and Reset in the header on the ${name} tab`);
-    check(/MOCK mode/.test(await page.getByTestId('sim-banner').innerText()), `the banner names the Mock mode on the ${name} tab`);
+    check(/MOCK/.test(await page.getByTestId('mode-badge').innerText()), `the MOCK badge names the mode on the ${name} tab`);
   }
   check(await page.locator('main').count() === 1, 'one main landmark');
   // Real is refused with an honest message and the page stays in Mock
@@ -102,7 +110,7 @@ try {
   check((await page.getByTestId('mode-note').innerText()) === '', 'choosing Mock leaves no note');
   // P and Esc
   await page.keyboard.press('p');
-  check((await page.getByTestId('presenter').getAttribute('aria-pressed')) === 'true' && await page.getByTestId('sim-banner').isVisible() && await page.getByTestId('mode-select').isVisible(), 'P turns presenter mode on; the banner and the Mock | Real toggle stay');
+  check((await page.getByTestId('presenter').getAttribute('aria-pressed')) === 'true' && await page.getByTestId('mode-select').isVisible(), 'P turns presenter mode on; the Mock | Real toggle stays');
   await page.keyboard.press('Control+p');
   check((await page.getByTestId('presenter').getAttribute('aria-pressed')) === 'true', 'Ctrl+P is ignored');
   await page.keyboard.press('Escape');
@@ -208,9 +216,9 @@ try {
   check(/UNVERIFIED/.test(await page.locator('main').innerText()), 'What is real tab labels product behaviour UNVERIFIED');
   await page.getByRole('link', { name: 'Sequence', exact: true }).click();
 
-  // Presenter mode keeps the banner
+  // Presenter mode: no banner, no tabs
   await page.getByTestId('presenter').click();
-  check(await page.getByTestId('sim-banner').isVisible() && (await page.getByRole('link', { name: 'Interlocks', exact: true }).count()) === 0, 'presenter mode keeps the banner');
+  check((await page.getByTestId('sim-banner').count()) === 0 && (await page.getByRole('link', { name: 'Interlocks', exact: true }).count()) === 0, 'presenter mode has no banner and no tabs');
   await simulateAndShowAll();
   await shot('5-presenter-light');
   await page.getByTestId('presenter').click();

@@ -42,8 +42,8 @@ The story is neutral and fictional: "Example Corp", an end user, and a generic `
 - **Movie reel** under the diagram: one frame per message. Choosing a frame fills the **details row** (what each of the two participants does) and the **wire form** panel (the real request, response, checks, and tokens labelled MOCK-ISSUED).
 - **Break it on purpose**: radio chips for the 12 mistakes (`unlisted_connector`, `wrong_verifier`, `replayed_code`, `bad_redirect`, `missing_resource`, `wrong_audience`, `expired_token`, `wrong_scope`, `missing_iss`, `forged_iss`, `wrong_state`, `passthrough`). The run stops at the refusing actor, and a panel says which actor refused, with which error, under which standard, and why. See [docs/architecture.md](docs/architecture.md) for the table.
 - **Interlocks** tab: every mistake with its expected refusal, and a "Run all" that fills in what the stubs actually did. **What is real** tab: the standards and the UNVERIFIED product claims.
-- Every tab, and presenter mode, carries the simulation banner. Dark and light themes, usable at 375px.
-- **Keyboard**: Tab to a box, press Enter to select it, then the arrow keys move it (Shift for larger steps); Escape deselects. **P** turns presenter mode on and off and **Esc** leaves it (the banner stays; keys with Ctrl, Cmd or Alt are ignored). At phone width the diagram scrolls sideways inside its own frame instead of shrinking, so the boxes after the first two need a pan.
+- The page opens on a MOCK modal (one line, "Got it" or Esc closes it; it stays away for the rest of that browser session). Dark and light themes, usable at 375px.
+- **Keyboard**: Tab to a box, press Enter to select it, then the arrow keys move it (Shift for larger steps); Escape deselects. **P** turns presenter mode on and off and **Esc** leaves it (keys with Ctrl, Cmd or Alt are ignored). At phone width the diagram scrolls sideways inside its own frame instead of shrinking, so the boxes after the first two need a pan.
 
 ## Run from a clone
 
@@ -108,7 +108,7 @@ Other variables: `MCP_FLOW_STUB_BASE` (the first of the five mock-actor ports, d
 
 ## Mock and live modes
 
-The header of every page, including presenter mode, has a **Mock | Live** toggle and a `MOCK` badge, and the simulation banner names the same mode. Mock is the only mode: the whole flow runs against the in-process mock actors. Live is refused with this message, and the page stays in Mock: "Live mode is not available in this lab: every actor is an in-process mock on 127.0.0.1 and no real provider is configured or contacted, so the page stays in Mock mode." (`POST /api/mode` answers 409 `live_not_supported`.) The browser logs that deliberate 409, and the refusals the mistake runs show, as console messages.
+The header of every page, including presenter mode, has a **Mock | Live** toggle and a `MOCK` badge, and the MOCK modal that opens the page names the same mode. Mock is the only mode: the whole flow runs against the in-process mock actors. Live is refused with this message, and the page stays in Mock: "Live mode is not available in this lab: every actor is an in-process mock on 127.0.0.1 and no real provider is configured or contacted, so the page stays in Mock mode." (`POST /api/mode` answers 409 `live_not_supported`.) The browser logs that deliberate 409, and the refusals the mistake runs show, as console messages.
 
 ## Health, doctor and reset
 

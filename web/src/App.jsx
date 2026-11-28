@@ -12,6 +12,7 @@ import MistakeStrip from "./components/MistakeStrip.jsx";
 import StoryStrip from "./components/StoryStrip.jsx";
 import Interlocks from "./components/Interlocks.jsx";
 import About from "./components/About.jsx";
+import ModeModal from "./mode-modal/ModeModal.jsx";
 
 const safe = (fn, fallback) => { try { return fn(); } catch { return fallback; } };
 const initialTheme = () => {
@@ -24,7 +25,8 @@ const initialFont = () => {
 };
 export const BASE_MS = 1700;
 const SPEEDS = [["0.5", "0.5x"], ["1", "1x"], ["2", "2x"], ["4", "4x"]];
-const FALLBACK_BANNER = "SIMULATION, MOCK mode. Every actor here is an in-process mock on 127.0.0.1. No product, tenant or identity provider is contacted. Tokens are MOCK-ISSUED and protect nothing.";
+// Mock is the only mode this lab has (Real is refused by the server), so the modal is always MOCK; its line is what the old simulation banner said.
+const MODE_LINES = { mock: "A simulation: every actor is an in-process mock on 127.0.0.1 and no product, tenant or identity provider is contacted. Tokens are MOCK-ISSUED and protect nothing." };
 // A button that is "off" stays focusable and announced (aria-disabled) instead of being removed from the tab order, and does nothing when pressed.
 const off = (cond, fn) => ({ "aria-disabled": cond ? "true" : undefined, onClick: cond ? undefined : fn });
 // P and Esc are presenter shortcuts, but never while the visitor is typing or holding a modifier.
@@ -174,7 +176,6 @@ export default function App({ baseMs = BASE_MS }) {
   }, [togglePresenter]);
 
   const modeName = (flow?.mode || "mock").toUpperCase();
-  const bannerText = flow?.provenance?.standIn ? `SIMULATION, ${modeName} mode. ${flow.provenance.standIn}` : FALLBACK_BANNER;
   const mistakeDef = flow?.mistakes.find((m) => m.id === run?.mistake?.id) || null;
 
   return (
@@ -206,7 +207,6 @@ export default function App({ baseMs = BASE_MS }) {
         </TopMenu>
       </header>
       <main id="main" className="page" tabIndex={-1}>
-        <div className="banner" role="region" aria-label="Simulation notice" data-state="mock" data-testid="sim-banner"><strong>{bannerText}</strong></div>
         <p className="mode-note" role="status" aria-live="polite" data-testid="mode-note">{modeNote}</p>
         {loadError && <div className="alert" role="alert">The control API did not answer: {loadError}</div>}
         {!(flow && diagram) && !loadError && <p className="muted">Loading the flow definition...</p>}
@@ -259,6 +259,7 @@ export default function App({ baseMs = BASE_MS }) {
         {flow && diagram && !presenter && tab === "interlocks" && <Interlocks mistakes={flow.mistakes} participants={participants} results={results} onRun={runOne} onRunAll={runAll} busy={busy} />}
         {flow && diagram && tab === "about" && !presenter && <About flow={flow} />}
       </main>
+      <ModeModal mode="mock" lines={MODE_LINES} storageKey="mcpflow-mode" />
       <TalkTrackDialog isOpen={talkOpen} onClose={() => setTalkOpen(false)} talk={talk} />
 
     </div>
