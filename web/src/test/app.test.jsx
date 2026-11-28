@@ -26,33 +26,49 @@ beforeEach(() => {
   api.postRun.mockResolvedValue(HAPPY);
   api.postReset.mockResolvedValue({ ok: true });
 });
-afterEach(() => { cleanup(); vi.useRealTimers(); vi.clearAllMocks(); });
+afterEach(() => { cleanup(); vi.useRealTimers(); vi.clearAllMocks(); sessionStorage.clear(); });
 
 describe("chrome", () => {
-  it("shows the MOCK badge in the shell bar and the simulation banner on every tab", async () => {
+  it("shows the MOCK badge in the shell bar and opens on the MOCK modal, with no simulation banner on any tab", async () => {
     await mount();
     expect(screen.getByTestId("mode-badge")).toHaveTextContent("MOCK");
+    const modal = screen.getByTestId("mode-modal");
+    expect(modal).toHaveAttribute("data-mode", "mock");
+    expect(modal).toHaveTextContent(/MOCK/);
+    expect(modal).toHaveTextContent(/simulation/);
+    expect(modal).toHaveTextContent(/in-process mock on 127\.0\.0\.1/);
+    expect(modal).toHaveTextContent(/no product, tenant or identity provider is contacted/);
+    expect(modal).toHaveTextContent(/MOCK-ISSUED/);
     for (const name of ["Sequence", "Interlocks", "What is real"]) {
       fireEvent.click(screen.getByRole("link", { name }));
       expect(screen.getByRole("link", { name })).toHaveAttribute("aria-current", "page");
-      expect(screen.getByTestId("sim-banner")).toHaveTextContent(/SIMULATION/);
-      expect(screen.getByTestId("sim-banner")).toHaveTextContent(/MOCK-ISSUED/);
+      expect(screen.queryByTestId("sim-banner")).toBeNull();
+      expect(screen.queryByRole("region", { name: "Simulation notice" })).toBeNull();
+      expect(document.querySelector(".banner")).toBeNull();
     }
   });
-  it("puts the shell bar first, then main with the simulation banner as its first child", async () => {
+  it("Got it closes the modal, and it stays closed in the same session (a remount does not bring it back)", async () => {
+    const first = render(<App baseMs={1000} />);
+    await screen.findByTestId("simulate");
+    fireEvent.click(screen.getByTestId("mode-modal-ok"));
+    expect(screen.queryByTestId("mode-modal")).toBeNull();
+    first.unmount();
+    await mount();
+    expect(screen.queryByTestId("mode-modal")).toBeNull();
+  });
+  it("puts the shell bar first, then main with the mode note as its first child", async () => {
     const { container } = render(<App baseMs={1000} />);
     await screen.findByTestId("simulate");
     const bar = container.querySelector("header.shell-bar");
     const main = container.querySelector("main");
     expect(bar).not.toBeNull();
     expect(bar.compareDocumentPosition(main) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
-    expect(main.firstElementChild).toBe(screen.getByTestId("sim-banner"));
+    expect(main.firstElementChild).toBe(screen.getByTestId("mode-note"));
     expect(bar.querySelector("h1")).toHaveTextContent("AI assistant to MCP");
     expect(bar.querySelector("[data-testid='top-menu']")).not.toBeNull();
   });
-  it("puts the simulation notice in a landmark, and the headings never skip a level", async () => {
+  it("keeps the headings from skipping a level", async () => {
     await mount();
-    expect(screen.getByRole("region", { name: "Simulation notice" })).toBe(screen.getByTestId("sim-banner"));
     fireEvent.click(screen.getByTestId("step"));
     await screen.findByTestId("wire");
     const levels = screen.getAllByRole("heading").map((h) => Number(h.tagName[1]));
@@ -86,10 +102,10 @@ describe("chrome", () => {
     expect(screen.queryByTestId("org-badge")).toBeNull();
     expect(screen.getByRole("radio", { name: /Connector never listed/ })).toBeInTheDocument();
   });
-  it("keeps the banner in presenter mode and hides the tabs", async () => {
+  it("has no banner in presenter mode and hides the tabs", async () => {
     await mount();
     fireEvent.click(screen.getByTestId("presenter"));
-    expect(screen.getByTestId("sim-banner")).toBeInTheDocument();
+    expect(screen.queryByTestId("sim-banner")).toBeNull();
     expect(screen.queryByRole("link", { name: "Interlocks" })).toBeNull();
     expect(screen.getByTestId("presenter")).toHaveAttribute("aria-pressed", "true");
   });
@@ -219,7 +235,7 @@ describe("Mock | Real toggle, presenter keys, Reset and aria-disabled", () => {
       expect(sel).toHaveValue("mock");
       expect(screen.getByRole("option", { name: "Real" })).toHaveAttribute("disabled"); // the server's honest answer: this lab has no Real
       expect(screen.getByTestId("mode-badge")).toHaveTextContent("MOCK");
-      expect(screen.getByTestId("sim-banner")).toHaveTextContent(/MOCK mode/);
+      expect(screen.getByTestId("mode-modal")).toHaveAttribute("data-mode", "mock");
       expect(screen.getByTestId("reset")).toBeInTheDocument();
     };
     for (const name of ["Sequence", "Interlocks", "What is real"]) { fireEvent.click(screen.getByRole("link", { name })); check(); }
@@ -242,13 +258,13 @@ describe("Mock | Real toggle, presenter keys, Reset and aria-disabled", () => {
     fireEvent.change(screen.getByTestId("mode-select"), { target: { value: "mock" } });
     expect(screen.getByTestId("mode-note")).toBeEmptyDOMElement();
   });
-  it("P toggles presenter mode, Esc leaves it, the banner stays, and modifier keys and typing are ignored", async () => {
+  it("P toggles presenter mode, Esc leaves it, there is still no banner, and modifier keys and typing are ignored", async () => {
     await mount();
     const press = (key, init = {}, target = document.body) => fireEvent.keyDown(target, { key, ...init });
     expect(screen.getByTestId("presenter")).toHaveAttribute("aria-pressed", "false");
     press("p");
     expect(screen.getByTestId("presenter")).toHaveAttribute("aria-pressed", "true");
-    expect(screen.getByTestId("sim-banner")).toBeInTheDocument();
+    expect(screen.queryByTestId("sim-banner")).toBeNull();
     expect(screen.queryByRole("link", { name: "Interlocks" })).toBeNull();
     press("Escape");
     expect(screen.getByTestId("presenter")).toHaveAttribute("aria-pressed", "false");

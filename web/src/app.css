@@ -43,7 +43,7 @@ html { font-size: var(--fs, 16px); }
 .shell-nav a:hover { border-color: var(--on-box); }
 .shell-nav a[aria-current="page"] { background: var(--accent-gradient); color: var(--on-accent); font-weight: 600; }
 .shell-bar .shell-right { margin-left: auto; } /* TopMenu renders .top-menu.shell-right; its own layout stays */
-/* Page frame (section 3): one centred full-width column; the simulation banner is its first child. */
+/* Page frame (section 3): one centred full-width column; the mode-note is its first child. */
 .page { max-width: 1600px; margin: 0 auto; padding: 0 16px; }
 .mode-note { margin: 8px 0 0; padding: 6px 10px; border: 1px solid var(--border); border-left: 4px solid var(--status-info); border-radius: 8px; background: var(--surface-2); color: var(--text); font-size: 13px; }
 .mode-note:empty { display: none; }
@@ -198,7 +198,7 @@ button.primary[aria-disabled="true"] { opacity: 0.88; }
 .inv tbody th { font-weight: 400; max-width: 384px; }
 .std-list { columns: 288px; }
 
-/* Presenter mode: bigger type, fewer words. The simulation banner stays. */
+/* Presenter mode: bigger type, fewer words. */
 .presenter { font-size: 17px; }
 .presenter .hide-presenter { display: none; }
 .presenter .reel li { flex-basis: 152px; }

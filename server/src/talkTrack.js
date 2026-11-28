@@ -8,7 +8,7 @@ export const TALK_TRACK = {
       "id": "frame-it",
       "title": "Frame it",
       "time": "30 s",
-      "say": "\"A public AI assistant wants to call a tool inside our network for one of our users. We never give the assistant a password, and the tool never trusts the assistant's word alone.\" Point at the banner: everything here is a simulation with mock tokens."
+      "say": "\"A public AI assistant wants to call a tool inside our network for one of our users. We never give the assistant a password, and the tool never trusts the assistant's word alone.\" Point at the MOCK modal the page opens on: everything here is a simulation with mock tokens."
     },
     {
       "id": "getting-the-connector",
